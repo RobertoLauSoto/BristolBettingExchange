@@ -1,9 +1,9 @@
 import numpy as np
 import time
 import sys
+import pandas
+import matplotlib
 from horse import Horse
-import operator
-
 class Race:
     def __init__(self, name, distance, numHorses):
         self.id              = name      # id of race, especially useful if multiple races being simulated
@@ -37,6 +37,8 @@ class Race:
         self.currStandings.sort(key=lambda x: [x.currTime, -x.currDistance])
         for i in range(0, len(self.currStandings)):
             self.currStandings[i].currPosition = i+1
+            print(self.currStandings[i])
+        self.currStandings.clear()
 
     def determineFinalPlacings(self):
         self.finalStandings.sort(key=lambda x: [x.currTime, -x.currDistance])
