@@ -18,7 +18,7 @@ class Race:
         self.finalStandings  = []      # final standings at the end of the race
         self.winner          = []      # winner at the end of the race
         self.top3            = []      # top 3 standings at the end of the race
-        self.status          = None      # status of race (Running/Finished)
+        self.state          = None      # state of race (Running/Finished)
         
 
     def __str__(self) -> str:
@@ -35,7 +35,7 @@ class Race:
         return horses
     
     def determinePlacings(self):
-        self.finalStandings.sort(key=lambda x: x.currTime)
+        self.finalStandings.sort(key=lambda x: [x.currTime, x.currDistance])
         self.winner.append(self.finalStandings[0])
         self.top3.extend([self.finalStandings[0], self.finalStandings[1], self.finalStandings[2]])
 
@@ -43,26 +43,26 @@ class Race:
         horses   = self.createHorses() # create competitors
         time     = 0 # current race time in 'seconds'
         timestep = 1 # 1 second
-        while(self.status != 'Finished'):
+        while(self.state != 'Finished'):
             for i in range(0, self.numHorses):
                 time += timestep # race time increases
-                if (horses[i].status != 'Finished' or horses[i].status != 'DNF'):
-                    horses[i].status = 'Running' # horse is in running
+                if (horses[i].state != 'Finished' and horses[i].state != 'DNF'):
+                    horses[i].state = 'Running' # horse is in running
                     horses[i].currTime = time 
                     horses[i].prevSpeed = horses[i].currSpeed # record previous speed
                     horses[i].currSpeed = np.random.uniform(horses[i].minSpeed, horses[i].maxSpeed) # uniform random variable to update speed
-                    progress = horses[i].currSpeed * time # progress on this timestep, distance = speed x time
+                    progress = horses[i].currSpeed * timestep # progress on this timestep, distance = speed x time
                     horses[i].currDistance += progress # update current distance of horse along track
                     if (horses[i].currDistance >= self.distance):
-                        horses[i].status = 'Finished'
+                        horses[i].state = 'Finished'
                         print('Test : horse ' + str(i+1) + ' finished')
                         self.finalStandings.append(horses[i])
                     if (len(self.finalStandings) == self.numHorses):
-                        # self.determinePlacings()
-                        self.status = 'Finished'
+                        self.determinePlacings()
+                        self.state = 'Finished'
                         print(len(self.finalStandings))
                         print(self.numHorses)
-                        print(self.status)
+                        print(self.state)
                         break
                 else:
                     continue
@@ -70,9 +70,9 @@ class Race:
 
 testRace = Race("testRace", 1000, 8)
 testRace.runRace()
-# for i in range(0, len(testRace.winner)):
-#     print('Winner ' + str(testRace.winner[i]))
-# for i in range(0, len(testRace.top3)):
-#     print('Placed in ' + str(i+1) + ' place ' + str(testRace.top3[i]))
+for i in range(0, len(testRace.winner)):
+    print('Winner ' + str(testRace.winner[i]))
+for i in range(0, len(testRace.top3)):
+    print('Placed in ' + str(i+1) + ' place ' + str(testRace.top3[i]))
 for i in range(0, len(testRace.finalStandings)):
     print(testRace.finalStandings[i])

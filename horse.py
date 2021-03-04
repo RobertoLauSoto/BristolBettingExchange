@@ -17,10 +17,10 @@ class Horse:
         self.prefs          = None # vector for inital preference factors of competitor to help calculate step-size
         self.responsiveness = 1 # factor determining responsiveness of competitor, 1 = 100% responsive 
         self.groundLost     = 1 # factor determinining the ground lost by a competitor due to interfernce, 1 = no delay
-        self.status         = None # currrent status of competitor (Running/Finished/DNF)
+        self.state         = None # currrent state of competitor (Running/Finished/DNF)
 
     def __str__(self):
-        return '[ID %s startPos %s currPos %s currDis %s currSpeed %s currTime %s resp %s groundLost %s status %s]' \
-               % (self.name, self.startPosition, self.currPosition, self.currDistance, self.currSpeed, self.currTime, self.responsiveness, self.groundLost, self.status)
+        return '[ID %s startPos %s currPos %s currDis %s currSpeed %s currTime %s resp %s groundLost %s state %s]' \
+               % (self.name, self.startPosition, self.currPosition, self.currDistance, self.currSpeed, self.currTime, self.responsiveness, self.groundLost, self.state)
     
 
