@@ -6,20 +6,24 @@ import matplotlib.pyplot as plt
 from horse import Horse
 class Race:
     def __init__(self, name, distance, numHorses):
-        self.id              = name      # id of race, especially useful if multiple races being simulated
-        self.distance        = distance  # distance of the race in metres
-        self.numHorses       = numHorses # number of horses/competitors in the race
-        self.maxTopSpeed     = 24.5872   # top speed of a horse in m/s
-        self.raceFactors     = None      # vector for race conditions that affect competitors performance
-        self.lanes           = False     # determining whether race has lanes, e.g. 100m/200m/sprint swimming. If True, groundLost factor for each competitor remains 1 throughout race
-        self.staggered       = False     # for a staggered start, e.g. Formula 1, where each competitor begins stationary at a different distance away from start. If True, competitors initialised with different distances
-        self.rolling         = False     # for a rolling start, e.g. Nascar, where competitors begin race at speed with different distances away from start. If True, comps initialised with diff. distances and speeds
-        self.time            = 0         # time taken for the race to officialy end, e.g. last competitor crossed the line or top 3 determined
-        self.currStandings   = []        # current standings updated each time step
-        self.finalStandings  = []        # final standings at the end of the race
-        self.winner          = []        # winner at the end of the race
-        self.top3            = []        # top 3 standings at the end of the race
-        self.state           = None      # state of race (Running/Finished)
+        self.id              = name                         # id of race, especially useful if multiple races being simulated
+        self.distance        = distance                     # distance of the race in metres
+        self.numHorses       = numHorses                    # number of horses/competitors in the race
+        self.numRaceFactors  = 5                            # number of race factors affecting the performance of horses
+        self.raceFactors     = [None] * self.numRaceFactors # vector for race conditions that affect competitors performance
+        self.lanes           = False                        # determining whether race has lanes, e.g. 100m/200m/sprint swimming. If True, groundLost factor for each competitor remains 1 throughout race
+        self.staggered       = False                        # for a staggered start, e.g. Formula 1, where each competitor begins stationary at a different distance away from start. If True, competitors initialised with different distances
+        self.rolling         = False                        # for a rolling start, e.g. Nascar, where competitors begin race at speed with different distances away from start. If True, comps initialised with diff. distances and speeds
+        self.time            = 0                            # time taken for the race to officialy end, e.g. last competitor crossed the line or top 3 determined
+        self.currStandings   = []                           # current standings updated each time step
+        self.finalStandings  = []                           # final standings at the end of the race
+        self.winner          = []                           # winner at the end of the race
+        self.top3            = []                           # top 3 standings at the end of the race
+        self.state           = None                         # state of race (Running/Finished)
+
+        for i in range(self.numRaceFactors):
+            self.raceFactors[i] = np.random.uniform() # generate random number between 0 and 1
+        # print(self.raceFactors)
         
     def __str__(self) -> str:
         pass
@@ -27,20 +31,19 @@ class Race:
     def createHorses(self):
         horses = [None] * self.numHorses # array of Horse objects representing the starting horses
         for i in range(0,self.numHorses):
-            horses[i] = Horse(i+1, 0, 1, 0, 1, 0) # each horse has a number ID starting from 1 - could be changed to random string names
-            horses[i].minSpeed = np.random.uniform(1.0, 5.0) # uniform distribution between 1 and 5 m/s to determine minimum speed
-            horses[i].maxSpeed = np.random.uniform(self.maxTopSpeed / 2, self.maxTopSpeed) # uniform distribution between ~12.2 and 24.5872 m/s(world record speed for a horse) to determine maximum speed
+            horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors) # each horse has a number ID starting from 1 - could be changed to random string names
             # print(horses[i])
         return horses
-    
-    def generateForwardStep(self):
-        pass
-    
+
+    def generateForwardStep(self, horse):
+        return horse.prefFactor*np.random.uniform(horse.minSpeed / self.numRaceFactors, horse.maxSpeed / self.numRaceFactors) # uniform random variable to update speed
+        
     def plotRaceGraph(self, horses):
         fig, ax = plt.subplots() # generate figure with subplots
         for i in range(len(horses)):
             ax.plot(range(0, len(horses[i].distanceHistory)), horses[i].distanceHistory, label='Horse {}'.format(horses[i].name)) # plot each horses distance-time line graph 
         legend = ax.legend(loc='upper left')
+        plt.axhline(y=self.distance, color='black', linestyle='--')
         plt.xlabel('Time (seconds)')
         plt.ylabel('Distance (metres)')
         plt.title('Distance-Time graph for {}'.format(self.id))
@@ -70,14 +73,16 @@ class Race:
             for i in range(self.numHorses): # for each horse
                 self.currStandings.append(horses[i])
                 if horses[i].state != 'Finished' and horses[i].state != 'DNF':
-                    horses[i].distanceHistory.append(horses[i].currDistance)
+                    # horses[i].distanceHistory.append(horses[i].currDistance)
                     horses[i].state = 'Running' # horse is in running
                     horses[i].currTime = time 
                     horses[i].prevSpeed = horses[i].currSpeed # record previous speed
-                    horses[i].currSpeed = np.random.uniform(horses[i].minSpeed, horses[i].maxSpeed) # uniform random variable to update speed
+                    horses[i].currSpeed = self.generateForwardStep(horses[i]) # function to generate forward step at each iteration
                     progress = horses[i].currSpeed * timestep # progress on this timestep, distance = speed x time
                     horses[i].currDistance += progress # update current distance of horse along track
+                    horses[i].distanceHistory.append(horses[i].currDistance)
                     if horses[i].currDistance >= self.distance: # horse has crossed finish line
+                        # horses[i].distanceHistory.append(horses[i].currDistance)
                         horses[i].state = 'Finished'
                         horses[i].finishTime = (time - timestep) + ((self.distance - horses[i].distanceHistory[-1]) / horses[i].currSpeed) # finish time in real seconds
                         horses[i].currTime = horses[i].finishTime
@@ -86,7 +91,7 @@ class Race:
                     if len(self.finalStandings) == self.numHorses: # all horses have finished
                         self.determineFinalPlacings()
                         self.state = 'Finished'
-                        self.plotRaceGraph(horses)
+                        # self.plotRaceGraph(horses)
                         # print(len(self.finalStandings))
                         # print(self.numHorses)
                         # print(self.state)
@@ -95,7 +100,7 @@ class Race:
                     continue
                 
 if __name__ == "__main__":
-    testRace = Race("Test Race", 1000, 8)
+    testRace = Race("Test Race", 2000, 10)
     testRace.runRace()
     for i in range(len(testRace.winner)):
         print('Winner {}'.format(testRace.winner[i]))
@@ -103,4 +108,4 @@ if __name__ == "__main__":
         print('Placed in {0} place {1}'.format(i+1, testRace.top3[i]))
     for i in range(len(testRace.finalStandings)):
         print(testRace.finalStandings[i])
-    # testRace.plotRaceGraph(testRace.finalStandings)
+    testRace.plotRaceGraph(testRace.finalStandings)
