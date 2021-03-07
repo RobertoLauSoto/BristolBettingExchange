@@ -27,7 +27,7 @@ class Race:
     def createHorses(self):
         horses = [None] * self.numHorses # array of Horse objects representing the starting horses
         for i in range(0,self.numHorses):
-            horses[i] = Horse(i+1, 1, 1, 0, 0) # each horse has a number ID starting from 1 - could be changed to random string names
+            horses[i] = Horse(i+1, 0, 1, 0, 1, 0) # each horse has a number ID starting from 1 - could be changed to random string names
             horses[i].minSpeed = np.random.uniform(1.0, 5.0) # uniform distribution between 1 and 5 m/s to determine minimum speed
             horses[i].maxSpeed = np.random.uniform(self.maxTopSpeed / 2, self.maxTopSpeed) # uniform distribution between ~12.2 and 24.5872 m/s(world record speed for a horse) to determine maximum speed
             # print(horses[i])
@@ -45,7 +45,6 @@ class Race:
         plt.ylabel('Distance (metres)')
         plt.title('Distance-Time graph for {}'.format(self.id))
         plt.show()
-        
 
     def determineCurrentStandings(self):
         self.currStandings.sort(key=lambda x: [x.currTime, -x.currDistance]) # sort current standings of horses by time (asc.) and then by distance (dist.) if equal time
@@ -80,6 +79,8 @@ class Race:
                     horses[i].currDistance += progress # update current distance of horse along track
                     if horses[i].currDistance >= self.distance: # horse has crossed finish line
                         horses[i].state = 'Finished'
+                        horses[i].finishTime = (time - timestep) + ((self.distance - horses[i].distanceHistory[-1]) / horses[i].currSpeed) # finish time in real seconds
+                        horses[i].currTime = horses[i].finishTime
                         # print('Test : horse ' + str(i+1) + ' finished')
                         self.finalStandings.append(horses[i])
                     if len(self.finalStandings) == self.numHorses: # all horses have finished
