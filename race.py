@@ -54,7 +54,7 @@ class Race:
 
         # another way horse's resp can vary is if they have a delay themselves - e.g. injury, mechanical failure, tying their shoelaces - this can happen at any stage of the race
 
-        # horse can either recover or stay delayed for this time step
+        # horse can either recover or stay delayed for this time step - 20% likelihood that they recover
         if random.randint(1, 100) <= 20 and horse.delay == True:
             horse.delay = False
 
@@ -64,13 +64,32 @@ class Race:
         
 
     def generateGroundLoss(self, horse):
-        pass
+        groundLostFactor = 1
+        for i in range(len(self.horseDistances)):
+            if horse.name != i+1: # avoid comparing a horse to itself
+                if (0 <= self.horseDistances[i] - horse.currDistance <= 2): # if current horse is 2 metres or less behind comparison horse
+                    if (self.horses[i].currSpeed > horse.currSpeed): # if comparison horse is faster - do nothing
+                        groundLostFactor += 1
+                        continue
+                    else: # if comparison horse is slower - groundLost affected
+                        if random.randint(1, 100) <= 30: # 30% likelihood slower horse in front will affect faster horse behind as overtake fails
+                            result = np.random.normal(0.5, 0.1)
+                            groundLostFactor += result # horse is up to 50% slower
+                            print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, result))
+                        else: # overtake occurs - groundLost not affected
+                            groundLostFactor += 1
+                            continue
+                else:
+                    groundLostFactor += 1
+        horse.groundLost = groundLostFactor / self.numHorses
+
 
     def generateForwardStep(self, horse):
         self.generateResponsiveness(horse)
         # print('Horse {0} horse.resp = {1}'.format(horse.name, horse.resp))
-        self.generateGroundLoss(horse)
-        progress = horse.prefFactor*horse.resp*np.random.uniform(horse.minSpeed, horse.maxSpeed) # uniform random variable to update speed
+        if self.horseDistances[horse.name-1] != None:
+            self.generateGroundLoss(horse)    
+        progress = horse.prefFactor*horse.resp*horse.groundLost*np.random.uniform(horse.minSpeed, horse.maxSpeed) # uniform random variable to update speed
         # if progress < (horse.minSpeed):
         #     progress = horse.minSpeed
         # if progress > (horse.maxSpeed):
@@ -119,7 +138,7 @@ class Race:
                     progress = self.horses[i].currSpeed * timestep # progress on this timestep, distance = speed x time
                     self.horses[i].currDistance += progress # update current distance of horse along track
                     self.horses[i].distanceHistory.append(self.horses[i].currDistance)
-                    self.horseDistances.append(self.horses[i].currDistance)
+                    self.horseDistances[i] = self.horses[i].currDistance
                     if self.horses[i].currDistance >= self.distance: # horse has crossed finish line
                         self.horses[i].state = 'Finished'
                         self.horses[i].finishTime = (time - timestep) + ((self.distance - self.horses[i].distanceHistory[-1]) / self.horses[i].currSpeed) # finish time in real seconds
