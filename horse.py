@@ -18,8 +18,9 @@ class Horse:
         self.finishTime      = 0                                # finish time in real seconds of horse
         self.acceleration    = 0                                # current acceleration of the competitor (m/s2)
         self.prefs           = [None] * numRaceFactors          # vector for inital preference factors of competitor to help calculate step-size
-        self.prefFactor      = 0
-        self.resp            = 1                                # factor determining responsiveness of competitor, 1 = 100% responsive 
+        self.prefFactor      = 0                                # preference factor calculated after p-norm distance between pref vector and race factor vectro
+        self.resp            = 1                                # factor determining responsiveness of competitor, 1 = 100% responsive
+        self.delay           = False                            # boolean determining if delay to competitor has occurred
         self.groundLost      = 1                                # factor determinining the ground lost by a competitor due to interfernce, 1 = no delay
         self.distanceHistory = []                               # array of distances run in the race
         self.state           = None                             # currrent state of competitor (Running/Finished/DNF)
@@ -28,7 +29,7 @@ class Horse:
             self.prefs[i] = np.random.uniform() # generate random number between 0 and 1
         # print(self.prefs)
 
-        self.minSpeed = np.random.uniform(2.0, 5.0) # uniform distribution between 1 and 5 m/s to determine minimum speed
+        self.minSpeed = np.random.uniform(3.0, 5.0) # uniform distribution between 2 and 5 m/s to determine minimum speed
         self.maxSpeed = np.random.uniform(self.maxTopSpeed / 1.2, self.maxTopSpeed) # uniform distribution between ~12.2 and 24.5872 m/s(world record speed for a horse) to determine maximum speed
 
         pNorm = 3 # see https://en.wikipedia.org/wiki/Distance#Distance_in_Euclidean_space
@@ -38,7 +39,7 @@ class Horse:
         for i in range(numRaceFactors):
             prefDistance += abs(raceFactors[i] - self.prefs[i]) ** pNorm
         prefDistance = prefDistance ** (1 / pNorm)
-        self.prefFactor =  prefConstant - prefDistance
+        self.prefFactor =  (prefConstant - prefDistance) / numRaceFactors
         print('Horse {0} pref distance is : {1}. Pref factor is: {2}. Min speed is: {3}. Max speed is: {4}.'.format(self.name, prefDistance, self.prefFactor, self.minSpeed, self.maxSpeed))
         
 
