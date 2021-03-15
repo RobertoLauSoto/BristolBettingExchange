@@ -1,7 +1,4 @@
 import numpy as np
-import time
-import sys
-
 class Horse:
     def __init__(self, name, startDistance, startPos, currDistance, currPos, time, numRaceFactors, raceFactors):
         self.name            = name                             # identity of the horse/competitor
@@ -41,10 +38,35 @@ class Horse:
         prefDistance = prefDistance ** (1 / pNorm)
         self.prefFactor =  (prefConstant - prefDistance) / numRaceFactors
         print('Horse {0} pref distance is : {1}. Pref factor is: {2}. Min speed is: {3}. Max speed is: {4}.'.format(self.name, prefDistance, self.prefFactor, self.minSpeed, self.maxSpeed))
+
+    def reset(self):
+        self.currDistance = 0
+        self.currPosition = 1
+        self.currTime = 0
+        self.currSpeed = 0
+        self.prevSpeed = 0
+        self.finishTime = 0
+        self.acceleration = 0
+        self.resp = 1
+        self.delay = False
+        self.groundLost = 1
+        self.distanceHistory.clear()
+        self.state = None
         
 
     def __str__(self):
-        return '[ID %s startDistance %s startPosition %s currDistance %s currPosition %s currSpeed %s currTime %s resp %s groundLost %s state %s]' \
-               % (self.name, self.startDistance, self.startPosition, self.currDistance, self.currPosition, self.currSpeed, self.currTime, self.resp, self.groundLost, self.state)
+        return '[ID %s startDistance %s startPosition %s currDistance %s currPosition %s currSpeed %s currTime %s resp %s groundLost %s state %s minSpeed %s maxSpeed %s]' \
+               % (self.name,
+                  round(self.startDistance, 5),
+                  self.startPosition,
+                  round(self.currDistance, 5), 
+                  self.currPosition, 
+                  round(self.currSpeed, 5), 
+                  round(self.currTime, 5), 
+                  round(self.resp, 5), 
+                  round(self.groundLost, 5), 
+                  self.state, 
+                  round(self.minSpeed, 5), 
+                  round(self.maxSpeed, 5))
     
 

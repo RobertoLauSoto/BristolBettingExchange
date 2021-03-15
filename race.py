@@ -32,9 +32,25 @@ class Race:
         pass
 
     def createHorses(self):
-        for i in range(0,self.numHorses):
-            self.horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors) # each horse has a number ID starting from 1 - could be changed to random string names
+        horses = [None] * self.numHorses
+        for i in range(self.numHorses):
+            horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors) # each horse has a number ID starting from 1 - could be changed to random string names
             # print(horses[i])
+        return horses
+
+    def resetHorses(self):
+        for i in range(self.numHorses):
+            self.horses[i].reset()
+
+    def reset(self):
+        self.time = 0
+        self.currStandings   = []                           
+        self.finalStandings  = []                           
+        self.winner          = []                           
+        self.top3            = []                            
+        self.state           = None
+        self.horseDistances  = [None] * self.numHorses
+        self.resetHorses()
 
     def generateResponsiveness(self, horse):
         # one way responsiveness can vary is dependent on the distance covered in the race by th competitor
@@ -69,19 +85,22 @@ class Race:
             if horse.name != i+1: # avoid comparing a horse to itself
                 if (0 <= self.horseDistances[i] - horse.currDistance <= 2): # if current horse is 2 metres or less behind comparison horse
                     if (self.horses[i].currSpeed > horse.currSpeed): # if comparison horse is faster - do nothing
-                        groundLostFactor += 1
+                        # groundLostFactor += 1
                         continue
                     else: # if comparison horse is slower - groundLost affected
                         if random.randint(1, 100) <= 30: # 30% likelihood slower horse in front will affect faster horse behind as overtake fails
-                            result = np.random.normal(0.5, 0.1)
-                            groundLostFactor += result # horse is up to 50% slower
-                            print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, result))
+                            result = np.random.normal(0.5, 0.1) * groundLostFactor
+                            groundLostFactor = result # horse is up to 50% slower
+                            # print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, result))
                         else: # overtake occurs - groundLost not affected
-                            groundLostFactor += 1
+                            # groundLostFactor += 1
+                            # print('Overtake by Horse {0} on Horse {1} success - ground lost factor is {2}'.format(horse.name, self.horses[i].name, groundLostFactor))
                             continue
                 else:
-                    groundLostFactor += 1
-        horse.groundLost = groundLostFactor / self.numHorses
+                    # groundLostFactor += 1
+                    continue
+        # horse.groundLost = groundLostFactor / self.numHorses
+        horse.groundLost = groundLostFactor
 
 
     def generateForwardStep(self, horse):
@@ -121,8 +140,8 @@ class Race:
         self.winner.append(self.finalStandings[0]) # get winner
         self.top3.extend([self.finalStandings[0], self.finalStandings[1], self.finalStandings[2]]) # get top 3 placed
 
-    def runRace(self):
-        self.createHorses() # create competitors
+    def runRace(self, horses):
+        self.horses = horses
         time     = 0 # current race time in 'seconds'
         timestep = 1 # 1 second
         while(self.state != 'Finished'): # while race is in running
@@ -146,6 +165,7 @@ class Race:
                         # print('Test : horse ' + str(i+1) + ' finished')
                         self.finalStandings.append(self.horses[i])
                     if len(self.finalStandings) == self.numHorses: # all horses have finished
+                        self.time = self.horses[-1].finishTime
                         self.determineFinalPlacings()
                         self.state = 'Finished'
                         # self.plotRaceGraph(horses)
@@ -158,11 +178,16 @@ class Race:
                 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
-    testRace.runRace()
-    # for i in range(len(testRace.winner)):
-    #     print('Winner {}'.format(testRace.winner[i]))
-    # for i in range(len(testRace.top3)):
-    #     print('Placed in {0} place {1}'.format(i+1, testRace.top3[i]))
-    for i in range(len(testRace.finalStandings)):
-        print(testRace.finalStandings[i])
-    testRace.plotRaceGraph()
+    horses = testRace.createHorses() # create competitors
+    for numSims in range(10):
+        testRace.id = 'Test Race {}'.format(numSims+1)
+        testRace.runRace(horses)
+        # for i in range(len(testRace.winner)):
+        #     print('Winner {}'.format(testRace.winner[i]))
+        # for i in range(len(testRace.top3)):
+        #     print('Placed in {0} place {1}'.format(i+1, testRace.top3[i]))
+        for i in range(len(testRace.finalStandings)):
+            print(testRace.finalStandings[i])
+        testRace.plotRaceGraph()
+        print('Simulation {} complete'.format(numSims+1))
+        testRace.reset()
