@@ -36,7 +36,7 @@ class Race:
         for i in range(self.numHorses):
             horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors) # each horse has a number ID starting from 1 - could be changed to random string names
             # print(horses[i])
-        return horses
+        self.horses = horses
 
     def resetHorses(self):
         for i in range(self.numHorses):
@@ -140,8 +140,8 @@ class Race:
         self.winner.append(self.finalStandings[0]) # get winner
         self.top3.extend([self.finalStandings[0], self.finalStandings[1], self.finalStandings[2]]) # get top 3 placed
 
-    def runRace(self, horses):
-        self.horses = horses
+    def runRace(self):
+        # self.horses = horses
         time     = 0 # current race time in 'seconds'
         timestep = 1 # 1 second
         while(self.state != 'Finished'): # while race is in running
@@ -178,10 +178,10 @@ class Race:
                 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
-    horses = testRace.createHorses() # create competitors
+    testRace.createHorses() # create competitors
     for numSims in range(10):
         testRace.id = 'Test Race {}'.format(numSims+1)
-        testRace.runRace(horses)
+        testRace.runRace()
         # for i in range(len(testRace.winner)):
         #     print('Winner {}'.format(testRace.winner[i]))
         # for i in range(len(testRace.top3)):
@@ -189,5 +189,5 @@ if __name__ == "__main__":
         for i in range(len(testRace.finalStandings)):
             print(testRace.finalStandings[i])
         testRace.plotRaceGraph()
-        print('Simulation {} complete'.format(numSims+1))
+        print('{} complete'.format(testRace.id))
         testRace.reset()
