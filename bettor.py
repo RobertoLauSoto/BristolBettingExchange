@@ -14,6 +14,8 @@ class Bettor:
         self.racePlacings = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
         self.raceTimings  = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
         self.racePrefs    = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
+        self.horseResults = [None] * race.numHorses # list of lists of results of each horse after a number of simulations, recording probabilites to win/average position etc.
+        self.oddsWeight    = 0
         self.startOdds    = [None] * race.numHorses # list of starting odds calculated by bettors, based on placings/timings/prefs etc.
 
     def __str__(self) -> str:
@@ -40,7 +42,31 @@ class Bettor:
                 self.raceTimings[i].append(round(standings[i].currTime, 5))
 
     def startOddsPlacings(self):
-        pass
+        self.oddsWeight = np.random.uniform(0.5, 0.95)
+        print('Bettor {0} Odds weight: {1}'.format(self.id, self.oddsWeight))
+        for i in range(len(self.racePlacings)):
+            numberWins = 0
+            totalPosition = 0
+            avgPosition = 0
+            for j in range(len(self.racePlacings[i])):
+                if self.racePlacings[i][j] == 1:
+                    numberWins += 1
+                totalPosition += self.racePlacings[i][j]
+            probPlacingFirst = (numberWins / len(self.racePlacings[i])) * 100
+            avgPosition = totalPosition / len(self.racePlacings[i])
+            probFromAvgPosition = (1 - (avgPosition / self.race.numHorses))*100
+            finalProb = self.oddsWeight*probPlacingFirst + (1-self.oddsWeight)*probFromAvgPosition
+            self.horseResults[i] = [probPlacingFirst, avgPosition, finalProb, self.oddsWeight]
+            print('Bettor {0} Probability of Horse {1} placing 1st is: {2}'.format(self.id, i+1, self.horseResults[i][0]))
+            print('Bettor {0} Average position of Horse {1}: {2}'.format(self.id, i+1, avgPosition))
+            print('Bettor {0} Final Probability of Horse {1}: {2}'.format(self.id, i+1, finalProb))
+            if finalProb != 0:
+                decimalOddsToWin = 1 / (finalProb / 100)
+            else:
+                decimalOddsToWin = 1 / (0.1 / 100)
+            self.startOdds[i] = decimalOddsToWin
+            print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
+
 
     def startOddsTimings(self):
         pass
@@ -58,15 +84,16 @@ class Bettor:
             #     print('Winner {}'.format(simulation.winner[i]))
             # for i in range(len(simulation.top3)):
             #     print('Placed in {0} place {1}'.format(i+1, simulation.top3[i]))
-            for i in range(len(simulation.finalStandings)):
-                print(simulation.finalStandings[i])
+            # for i in range(len(simulation.finalStandings)):
+            #     print(simulation.finalStandings[i])
             # simulation.plotRaceGraph()
-            print('{} complete'.format(simulation.id))
+            # print('{} complete'.format(simulation.id))
             self.recordPlacings(simulation.finalStandings)
             self.recordTimings(simulation.finalStandings)
             simulation.reset()
-        print(self.racePlacings)
-        print(self.raceTimings)
+        # print(self.racePlacings)
+        # print(self.raceTimings)
+        self.startOddsPlacings()
 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
@@ -75,5 +102,5 @@ if __name__ == "__main__":
     bettors = [None] * numBettors
     for i in range(numBettors):
         bettors[i] = Bettor(i+1, 500, 'Test', 0, testRace)
-        bettors[i].runSimulations(2)
+        bettors[i].runSimulations(100)
     

@@ -11,7 +11,7 @@ class Race:
         self.distance        = distance                     # distance of the race in metres
         self.numHorses       = numHorses                    # number of horses/competitors in the race
         self.horses          = [None] * numHorses           # vector of Horse objects representing field of competitors in the race
-        self.horseDistances  = [None] * numHorses           # vector of distances D representing current distances run by competitors along track
+        self.horseDistances  = [None] * numHorses           # vector of distances representing current distances run by competitors along track
         self.numRaceFactors  = 5                            # number of race factors affecting the performance of horses
         self.raceFactors     = [None] * self.numRaceFactors # vector for race conditions that affect competitors performance
         self.lanes           = False                        # determining whether race has lanes, e.g. 100m/200m/sprint swimming. If True, groundLost factor for each competitor remains 1 throughout race
@@ -77,7 +77,6 @@ class Race:
         if random.randint(1, 100) <= 2 and horse.delay == False:
             horse.delay = True
             horse.resp = np.random.uniform(0.0, 0.2)
-        
 
     def generateGroundLoss(self, horse):
         groundLostFactor = 1
@@ -101,7 +100,6 @@ class Race:
                     continue
         # horse.groundLost = groundLostFactor / self.numHorses
         horse.groundLost = groundLostFactor
-
 
     def generateForwardStep(self, horse):
         self.generateResponsiveness(horse)
@@ -179,7 +177,7 @@ class Race:
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
     testRace.createHorses() # create competitors
-    for numSims in range(10):
+    for numSims in range(1):
         testRace.id = 'Test Race {}'.format(numSims+1)
         testRace.runRace()
         # for i in range(len(testRace.winner)):
