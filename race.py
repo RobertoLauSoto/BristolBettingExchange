@@ -60,10 +60,10 @@ class Race:
             horse.resp = np.random.uniform(0.1, 0.4) # horse speed scaled down between 60 to 80% at beginning at random
         # competitors reach closer to their average speed during next 20% of race
         elif (0.1 < distanceCovered <= 0.3 and horse.delay == False):
-            horse.resp = np.random.uniform(0.6, 0.8) # horse speed scaled down by a bit less as they gather momentum - 80 to 95%
+            horse.resp = np.random.uniform(0.4, 0.8) # horse speed scaled down by a bit less as they gather momentum - 80 to 95%
         # next 60% of race competitors should be at or around their average speed
         elif (0.3 < distanceCovered <= 0.9 and horse.delay == False):
-            horse.resp = np.random.uniform(0.95, 1.1) # horse can have short bursts of acceleration or deceleration
+            horse.resp = np.random.uniform(0.8, 1.1) # horse can have short bursts of acceleration or deceleration
         # final 10% of race is volatile - competitors might be tired out or be bursting towards the finish line
         elif (0.9 < distanceCovered < 1.0 and horse.delay == False):
             horse.resp = np.random.uniform(0.5, 1.5)
@@ -88,9 +88,8 @@ class Race:
                         continue
                     else: # if comparison horse is slower - groundLost affected
                         if random.randint(1, 100) <= 30: # 30% likelihood slower horse in front will affect faster horse behind as overtake fails
-                            result = np.random.normal(0.5, 0.1) * groundLostFactor
-                            groundLostFactor = result # horse is up to 50% slower
-                            # print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, result))
+                            groundLostFactor = np.random.normal(0.5, 0.1) * groundLostFactor # horse is around 50% slower
+                            # print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, groundLostFactor))
                         else: # overtake occurs - groundLost not affected
                             # groundLostFactor += 1
                             # print('Overtake by Horse {0} on Horse {1} success - ground lost factor is {2}'.format(horse.name, self.horses[i].name, groundLostFactor))
@@ -177,7 +176,7 @@ class Race:
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
     testRace.createHorses() # create competitors
-    for numSims in range(1):
+    for numSims in range(3):
         testRace.id = 'Test Race {}'.format(numSims+1)
         testRace.runRace()
         # for i in range(len(testRace.winner)):

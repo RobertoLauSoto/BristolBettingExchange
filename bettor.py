@@ -10,6 +10,7 @@ class Bettor:
         self.betType      = betType                 # type of strategy the bettor is taking
         self.birthTime    = time                    # age/time of bettor from init
         self.race         = race                    # Race object bettor is placing bets on
+        self.bet          = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName (will get deleted as LOB will be indexed by HorseName), Odds, Stake
         self.numSims      = 0                       # number of simulations made by bettor to create starting odds
         self.racePlacings = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
         self.raceTimings  = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
@@ -52,20 +53,25 @@ class Bettor:
                 if self.racePlacings[i][j] == 1:
                     numberWins += 1
                 totalPosition += self.racePlacings[i][j]
-            probPlacingFirst = (numberWins / len(self.racePlacings[i])) * 100
-            avgPosition = totalPosition / len(self.racePlacings[i])
-            probFromAvgPosition = (1 - (avgPosition / self.race.numHorses))*100
+            probPlacingFirst = (numberWins / self.numSims) * 100
+            avgPosition = totalPosition / self.numSims
+            probFromAvgPosition = ((1 - (avgPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
             finalProb = self.oddsWeight*probPlacingFirst + (1-self.oddsWeight)*probFromAvgPosition
-            self.horseResults[i] = [probPlacingFirst, avgPosition, finalProb, self.oddsWeight]
-            print('Bettor {0} Probability of Horse {1} placing 1st is: {2}'.format(self.id, i+1, self.horseResults[i][0]))
-            print('Bettor {0} Average position of Horse {1}: {2}'.format(self.id, i+1, avgPosition))
-            print('Bettor {0} Final Probability of Horse {1}: {2}'.format(self.id, i+1, finalProb))
+            self.horseResults[i] = [probPlacingFirst, avgPosition, probFromAvgPosition, finalProb, self.oddsWeight]
+            # print('Bettor {0} Probability of Horse {1} placing 1st is: {2}'.format(self.id, i+1, self.horseResults[i][0]))
+            # print('Bettor {0} Average position of Horse {1}: {2}'.format(self.id, i+1, avgPosition))
+            # print('Bettor {0} Average Position Probability of Horse {1}: {2}'.format(self.id, i+1, self.horseResults[i][3]))
+            # print('Bettor {0} Final Probability of Horse {1}: {2}'.format(self.id, i+1, finalProb))
+            # print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}'.format(self.id, i+1, self.horseResults[i][0], self.horseResults[i][2], self.horseResults[i][3]))
             if finalProb != 0:
                 decimalOddsToWin = 1 / (finalProb / 100)
             else:
                 decimalOddsToWin = 1 / (0.1 / 100)
             self.startOdds[i] = decimalOddsToWin
-            print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
+            # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
+            print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, decimalOddsToWIn = {5}'.format(
+                        self.id, i+1, round(self.horseResults[i][0], 2), round(self.horseResults[i][2], 2), round(self.horseResults[i][3], 2), round(self.startOdds[i], 2)))
+
 
 
     def startOddsTimings(self):
@@ -94,6 +100,9 @@ class Bettor:
         # print(self.racePlacings)
         # print(self.raceTimings)
         self.startOddsPlacings()
+
+        def placeBet(self, horseName):
+            pass
 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
