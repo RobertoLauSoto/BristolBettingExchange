@@ -16,7 +16,6 @@ class LOB:
     def addBet(self, bet):
         #bet is a dictionary, taken from bettor.bet
         index = bet['HorseName']
-        del bet['HorseName']            
         if self.bets.get(index) == None:
             self.bets[index] = [bet]
         else:
@@ -28,10 +27,21 @@ class LOB:
     def removeBet(self, horseID, bettorID):
         self.bets[horseID] = [i for i in self.bets[horseID] if not (i['BettorID'] == bettorID)]
 
-    def matchBet(self, horseID, bettorID, backBet, bestOddsID, bestOddsBet, bettors):
-        bettors[bettorID].matchedBets.append(backBet)
-        bestOddsBet['HorseName'] = horseID
+    def matchBet(self, horseID, bettorID, bet, bestOddsID, bestOddsBet, bettors):
+        bet['Matched'] = True
+        bet['Odds'] = bestOddsBet['Odds']
+        if bet['BetType'] == 'Back':
+            bet['Profit'] = bestOddsBet['Liability']
+        if bet['BetType'] == 'Lay':
+            bet['Liability'] = bestOddsBet['Profit']
+        bettors[bettorID].placedBets.append(bet)
+        bettors[bettorID].matchedBets.append(bet)
+        bestOddsBet['Matched'] = True
         bettors[bestOddsID].matchedBets.append(bestOddsBet)
+        # changed flag of the bet in the bettors placed bet array to True
+        for bet in range(len(bettors[bestOddsID].placedBets)):
+            if bettors[bestOddsID].placedBets[bet]['HorseName'] == bestOddsBet['HorseName'] and bettors[bestOddsID].placedBets[bet]['Odds'] == bestOddsBet['Odds']:
+                bettors[bestOddsID].placedBets[bet]['Matched'] = True
         self.removeBet(horseID, bestOddsID+1)
     
     def anonLOB(self):
@@ -46,7 +56,6 @@ class LOB:
                 self.bets[i+1].sort(key=lambda x: x['Odds'])
             elif self.bets[i+1][0]['BetType'] == 'Lay':
                 self.bets[i+1].sort(key=lambda x: x['Odds'], reverse=True)
-
 
 if __name__ == "__main__":
     pass

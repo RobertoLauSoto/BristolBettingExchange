@@ -33,10 +33,9 @@ class BBE:
         self.backs = LOB('Backs')
         self.lays  = LOB('Lays')
         
-        
         for horse in range(self.race.numHorses):
             listOfBettors = list(range(1, self.numBettors+1))
-            print('HORSE {}'.format(horse+1))
+            # print('HORSE {}'.format(horse+1))
             for bettor in range(self.numBettors):
                 # get best odds currently on LOB, depends on what action is to be taken by the bettor
                 # for the backs LOB, bettor wants to get matched with lowest odds available - therefore best odds is the min value on the LOB
@@ -51,8 +50,8 @@ class BBE:
                     bestlayOddsID = bestLayOddsBet['BettorID']
                 randomBettorId = np.random.choice(listOfBettors)
                 listOfBettors.remove(randomBettorId)
-                backBet = self.bettors[randomBettorId-1].placeStartBet(horse, 'Back')
-                layBet = self.bettors[randomBettorId-1].placeStartBet(horse, 'Lay')
+                backBet = self.bettors[randomBettorId-1].placeBet(horse, 'Back')
+                layBet = self.bettors[randomBettorId-1].placeBet(horse, 'Lay')
                 backMatched = False
                 layMatched = False
                 # check if LOB is empty; if not, see if a bet on there can be matched
@@ -60,23 +59,25 @@ class BBE:
                     # figure out if a lay can be matched
                     if self.lays.bestOdds >= backBet['Odds']:
                         layMatched = True
-                        if randomBettorId == 1 or bestlayOddsID == 1:
-                            print('layMatched {0}, {1}, {2}'.format(bettor, randomBettorId, bestlayOddsID))
+                        # if randomBettorId == 1 or bestlayOddsID == 1:
+                        #     print('layMatched {0}, {1}, {2}'.format(bettor, randomBettorId, bestlayOddsID))
                         #remove best odds from LOB
                         self.lays.matchBet(horse+1, randomBettorId-1, backBet, bestlayOddsID-1, bestLayOddsBet, self.bettors)
                 if self.backs.bestOdds != None:
                     #figure out if a back can be matched
                     if self.backs.bestOdds <= layBet['Odds']:
                         backMatched = True
-                        if randomBettorId == 1 or bestbackOddsID == 1:                        
-                            print('backMatched {0}, {1}, {2}'.format(bettor, randomBettorId, bestbackOddsID))
+                        # if randomBettorId == 1 or bestbackOddsID == 1:                        
+                        #     print('backMatched {0}, {1}, {2}'.format(bettor, randomBettorId, bestbackOddsID))
                         self.backs.matchBet(horse+1, randomBettorId-1, layBet, bestbackOddsID-1, bestBackOddsBet, self.bettors)
                 # if the LOB is empty, or if no good odds available on the LOB, place a new bet on the LOB
                 if self.backs.bestOdds == None or layMatched != True:
                     # first place back bet
+                    self.bettors[randomBettorId-1].placedBets.append(backBet)
                     self.backs.addBet(backBet)
                 if self.lays.bestOdds == None or backMatched != True:
                     # then place lay bet
+                    self.bettors[randomBettorId-1].placedBets.append(layBet)
                     self.lays.addBet(layBet)            
                 if bettor+1 == self.numBettors:
                     #reset best odds
@@ -99,9 +100,35 @@ class BBE:
                 print(self.race.finalStandings[i])
         self.race.plotRaceGraph()
         
-
     def payoutWinners(self):
-        pass
+        for bettor in range(self.numBettors):
+            for betCounter in range(len(self.bettors[bettor].matchedBets)):
+                bet = self.bettors[bettor].matchedBets[betCounter]
+                if bet['HorseName'] == self.race.winner[0].name:
+                    if bet['BetType'] == 'Back':
+                        # horse won - successful back
+                        # get stake back + profit
+                        self.bettors[bettor].balance += bet['Stake'] + bet['Profit']
+                    if bet['BetType'] == 'Lay':
+                        # horse won - unsuccessful lay
+                        # pay liability
+                        self.bettors[bettor].balance -= bet['Liability']
+                else:
+                    if bet['BetType'] == 'Back':
+                        # horse lost - unsuccesful back
+                        # stake already removed from balance so no update
+                        pass
+                    if bet['BetType'] == 'Lay':
+                        # horse lost - successful lay
+                        # receive backer's stake
+                        self.bettors[bettor].balance += bet['Stake']
+            for betCounter in range(len(self.bettors[bettor].placedBets)):
+                bet = self.bettors[bettor].placedBets[betCounter]
+                if bet['BetType'] == 'Back' and bet['Matched'] == False:
+                    # unmatched back bet - return stake to bettor
+                    # print('Unmatched Bet')
+                    self.bettors[bettor].balance += bet['Stake']
+            self.bettors[bettor].balance = round(self.bettors[bettor].balance, 2)
 
 if __name__ == "__main__":
     testBBE = BBE('Test', 'Test Race - Real Race', 2000, 10, 10)
@@ -113,5 +140,8 @@ if __name__ == "__main__":
     # print(testBBE.lob[1].bets[1])
     # print(testBBE.lob[0].anonBets[1])
     # print(testBBE.lob[1].anonBets[1])
-    print(testBBE.bettors[0].matchedBets)
+    # print(testBBE.bettors[0].matchedBets)
     testBBE.runRace()
+    testBBE.payoutWinners()
+    for bettor in range(testBBE.numBettors):
+        print(testBBE.bettors[bettor].balance)

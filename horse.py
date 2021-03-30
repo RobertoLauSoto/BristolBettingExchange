@@ -53,7 +53,6 @@ class Horse:
         self.distanceHistory.clear()
         self.state = None
         
-
     def __str__(self):
         return '[ID %s startDistance %s startPosition %s currDistance %s currPosition %s currSpeed %s currTime %s resp %s groundLost %s state %s minSpeed %s maxSpeed %s]' \
                % (self.name,
@@ -68,5 +67,3 @@ class Horse:
                   self.state, 
                   round(self.minSpeed, 5), 
                   round(self.maxSpeed, 5))
-    
-

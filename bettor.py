@@ -19,7 +19,7 @@ class Bettor:
         self.oddsWeight    = 0
         self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettors, based on placings/timings/prefs etc.
         self.currentOdds   = [None] * race.numHorses # list of currentOdds calculated by bettors, based on live race
-        self.unmatchedBets = []
+        self.placedBets    = []
         self.matchedBets   = []
 
     def __str__(self) -> str:
@@ -102,7 +102,7 @@ class Bettor:
         # print(self.raceTimings)
         self.startOddsPlacings()
 
-    def placeStartBet(self, horseName, betType):
+    def placeBet(self, horseName, betType):
         # figure out odds and stake given the horse being analysed
         # currently all it does is that it trys to back a horse at slightly longer odds, vice versa for lays
         if betType == 'Back':
@@ -110,14 +110,14 @@ class Bettor:
             # figure out stake
             # currently always bets 2 pounds
             stake = 2
-            profit = round((odds * stake) - stake, 2)
+            profit = (odds * stake) - stake
             self.balance -= stake
-            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Profit': profit}
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Profit': profit, 'Matched': False}
         elif betType == 'Lay':
             odds = round(self.startOdds[horseName] * np.random.uniform(0.9, 0.99), 2)
             stake = 2
-            liability = round((odds * stake) - stake, 2)
-            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability}
+            liability = (odds * stake) - stake
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': True}
         
         return bet
 
