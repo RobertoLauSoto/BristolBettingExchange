@@ -2,7 +2,7 @@ import numpy as np
 import time
 from horse import Horse
 from race import Race
-
+import copy
 class Bettor:
     def __init__(self, name, balance, betType, time, race):
         self.id            = name                    # id of bettor
@@ -83,7 +83,7 @@ class Bettor:
 
     def runSimulations(self, numSims):
         self.numSims = numSims
-        simulation = self.race
+        simulation = copy.deepcopy(self.race)
         for i in range(self.numSims):
             simulation.id = 'Simulation {0} by Bettor {1}'.format(i+1, self.id)
             simulation.runRace()
@@ -93,7 +93,7 @@ class Bettor:
             #     print('Placed in {0} place {1}'.format(i+1, simulation.top3[i]))
             # for i in range(len(simulation.finalStandings)):
             #     print(simulation.finalStandings[i])
-            # simulation.plotRaceGraph()
+            # simulation.plotRaceGraph(simulationId)
             # print('{} complete'.format(simulation.id))
             self.recordPlacings(simulation.finalStandings)
             self.recordTimings(simulation.finalStandings)

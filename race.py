@@ -138,7 +138,6 @@ class Race:
         self.top3.extend([self.finalStandings[0], self.finalStandings[1], self.finalStandings[2]]) # get top 3 placed
 
     def runRace(self):
-        # self.horses = horses
         time     = 0 # current race time in 'seconds'
         timestep = 1 # 1 second
         while(self.state != 'Finished'): # while race is in running
@@ -165,7 +164,7 @@ class Race:
                         self.time = self.horses[-1].finishTime
                         self.determineFinalPlacings()
                         self.state = 'Finished'
-                        # self.plotRaceGraph(horses)
+                        # self.plotRaceGraph()
                         # print(len(self.finalStandings))
                         # print(self.numHorses)
                         # print(self.state)

@@ -94,13 +94,17 @@ class BBE:
         self.lob[1].anonLOB()
 
     def runRace(self):
-        pass
+        self.race.runRace()
+        for i in range(len(self.race.finalStandings)):
+                print(self.race.finalStandings[i])
+        self.race.plotRaceGraph()
+        
 
     def payoutWinners(self):
         pass
 
 if __name__ == "__main__":
-    testBBE = BBE('Test', 'Test Race', 2000, 10, 10)
+    testBBE = BBE('Test', 'Test Race - Real Race', 2000, 10, 10)
     testBBE.prepareRace()
     testBBE.populateLob()
     # print(testBBE.unsortedLOB[0].bets[1])
@@ -110,3 +114,4 @@ if __name__ == "__main__":
     # print(testBBE.lob[0].anonBets[1])
     # print(testBBE.lob[1].anonBets[1])
     print(testBBE.bettors[0].matchedBets)
+    testBBE.runRace()
