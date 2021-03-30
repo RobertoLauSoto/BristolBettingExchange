@@ -5,19 +5,22 @@ from race import Race
 
 class Bettor:
     def __init__(self, name, balance, betType, time, race):
-        self.id           = name                    # id of bettor
-        self.balance      = balance                 # starting balance in bettor's wallet
-        self.betType      = betType                 # type of strategy the bettor is taking
-        self.birthTime    = time                    # age/time of bettor from init
-        self.race         = race                    # Race object bettor is placing bets on
-        self.bet          = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName (will get deleted as LOB will be indexed by HorseName), Odds, Stake
-        self.numSims      = 0                       # number of simulations made by bettor to create starting odds
-        self.racePlacings = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
-        self.raceTimings  = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
-        self.racePrefs    = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
-        self.horseResults = [None] * race.numHorses # list of lists of results of each horse after a number of simulations, recording probabilites to win/average position etc.
+        self.id            = name                    # id of bettor
+        self.balance       = balance                 # starting balance in bettor's wallet
+        self.betType       = betType                 # type of strategy the bettor is taking
+        self.birthTime     = time                    # age/time of bettor from init
+        self.race          = race                    # Race object bettor is placing bets on
+        self.bet           = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName (will get deleted as LOB will be indexed by HorseName), Odds, Stake
+        self.numSims       = 0                       # number of simulations made by bettor to create starting odds
+        self.racePlacings  = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
+        self.raceTimings   = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
+        self.racePrefs     = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
+        self.horseResults  = [None] * race.numHorses # list of lists of results of each horse after a number of simulations, recording probabilites to win/average position etc.
         self.oddsWeight    = 0
-        self.startOdds    = [None] * race.numHorses # list of starting odds calculated by bettors, based on placings/timings/prefs etc.
+        self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettors, based on placings/timings/prefs etc.
+        self.currentOdds   = [None] * race.numHorses # list of currentOdds calculated by bettors, based on live race
+        self.unmatchedBets = []
+        self.matchedBets   = []
 
     def __str__(self) -> str:
         pass
@@ -69,10 +72,8 @@ class Bettor:
                 decimalOddsToWin = 1 / (0.1 / 100)
             self.startOdds[i] = decimalOddsToWin
             # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
-            print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, decimalOddsToWIn = {5}'.format(
+            print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, decimalOddsToWin = {5}'.format(
                         self.id, i+1, round(self.horseResults[i][0], 2), round(self.horseResults[i][2], 2), round(self.horseResults[i][3], 2), round(self.startOdds[i], 2)))
-
-
 
     def startOddsTimings(self):
         pass
@@ -101,8 +102,24 @@ class Bettor:
         # print(self.raceTimings)
         self.startOddsPlacings()
 
-        def placeBet(self, horseName):
-            pass
+    def placeStartBet(self, horseName, betType):
+        # figure out odds and stake given the horse being analysed
+        # currently all it does is that it trys to back a horse at slightly longer odds, vice versa for lays
+        if betType == 'Back':
+            odds = round(self.startOdds[horseName] * np.random.uniform(1.01, 1.1), 2)
+            # figure out stake
+            # currently always bets 2 pounds
+            stake = 2
+            profit = round((odds * stake) - stake, 2)
+            self.balance -= stake
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Profit': profit}
+        elif betType == 'Lay':
+            odds = round(self.startOdds[horseName] * np.random.uniform(0.9, 0.99), 2)
+            stake = 2
+            liability = round((odds * stake) - stake, 2)
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability}
+        
+        return bet
 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
@@ -112,4 +129,3 @@ if __name__ == "__main__":
     for i in range(numBettors):
         bettors[i] = Bettor(i+1, 500, 'Test', 0, testRace)
         bettors[i].runSimulations(100)
-    
