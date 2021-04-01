@@ -25,7 +25,7 @@ class LOB:
         pass
 
     def removeBet(self, horseID, bettorID):
-        self.bets[horseID] = [i for i in self.bets[horseID] if not (i['BettorID'] == bettorID)]
+        self.bets[horseID] = [bet for bet in self.bets[horseID] if not (bet['BettorID'] == bettorID)]
 
     def matchBet(self, horseID, bettorID, bet, bestOddsID, bestOddsBet, bettors):
         bet['Matched'] = True

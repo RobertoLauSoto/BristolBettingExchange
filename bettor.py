@@ -4,23 +4,25 @@ from horse import Horse
 from race import Race
 import copy
 class Bettor:
-    def __init__(self, name, balance, betType, time, race):
+    def __init__(self, name, balance, betType, time, race, inPlayCheck):
         self.id            = name                    # id of bettor
         self.balance       = balance                 # starting balance in bettor's wallet
         self.betType       = betType                 # type of strategy the bettor is taking
         self.birthTime     = time                    # age/time of bettor from init
         self.race          = race                    # Race object bettor is placing bets on
-        self.bet           = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName (will get deleted as LOB will be indexed by HorseName), Odds, Stake
+        self.inPlayCheck   = inPlayCheck             # int representing how often a bettor updates their odds to decide in-play bets - 0 implies no in-play bets, 1 means every timestep, 10 every 10 timesteps etc.
+        self.bet           = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName, Odds, Stake
         self.numSims       = 0                       # number of simulations made by bettor to create starting odds
         self.racePlacings  = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
         self.raceTimings   = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
         self.racePrefs     = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
-        self.horseResults  = [None] * race.numHorses # list of lists of results of each horse after a number of simulations, recording probabilites to win/average position etc.
-        self.oddsWeight    = 0
-        self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettors, based on placings/timings/prefs etc.
-        self.currentOdds   = [None] * race.numHorses # list of currentOdds calculated by bettors, based on live race
-        self.placedBets    = []
-        self.matchedBets   = []
+        self.horseResults  = [None] * race.numHorses # list of dicts of results of each horse after a number of simulations, recording probabilites to win/average position etc.
+        self.oddsWeight    = 0                       # float representing the weight used to determine weighted average between horse probabilities, e.g. probability from the number of wins, from average finish position etc.
+        self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettor, based on placings/timings/prefs etc.
+        self.projStandings = [None] * race.numHorses # projected final standings calculated by bettor based on their simulations, used to compare to live standings to decide in play bets
+        self.currentOdds   = [None] * race.numHorses # list of current odds calculated by bettor, based on live race
+        self.placedBets    = []                      # list of all bets placed by the bettor, matched or unmatched
+        self.matchedBets   = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
 
     def __str__(self) -> str:
         pass
@@ -49,6 +51,7 @@ class Bettor:
         self.oddsWeight = np.random.uniform(0.5, 0.95)
         print('Bettor {0} Odds weight: {1}'.format(self.id, self.oddsWeight))
         for i in range(len(self.racePlacings)):
+            horseName = i+1
             numberWins = 0
             totalPosition = 0
             avgPosition = 0
@@ -60,7 +63,8 @@ class Bettor:
             avgPosition = totalPosition / self.numSims
             probFromAvgPosition = ((1 - (avgPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
             finalProb = self.oddsWeight*probPlacingFirst + (1-self.oddsWeight)*probFromAvgPosition
-            self.horseResults[i] = [probPlacingFirst, avgPosition, probFromAvgPosition, finalProb, self.oddsWeight]
+            self.horseResults[i] = {'probPlacingFirst': round(probPlacingFirst, 2), 'avgPosition': round(avgPosition, 2), 'probAvgPosition': round(probFromAvgPosition, 2),
+                                    'finalProb': round(finalProb, 2), 'oddsWeight': round(self.oddsWeight, 2), 'HorseName': horseName}
             # print('Bettor {0} Probability of Horse {1} placing 1st is: {2}'.format(self.id, i+1, self.horseResults[i][0]))
             # print('Bettor {0} Average position of Horse {1}: {2}'.format(self.id, i+1, avgPosition))
             # print('Bettor {0} Average Position Probability of Horse {1}: {2}'.format(self.id, i+1, self.horseResults[i][3]))
@@ -73,7 +77,13 @@ class Bettor:
             self.startOdds[i] = decimalOddsToWin
             # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
             print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, decimalOddsToWin = {5}'.format(
-                        self.id, i+1, round(self.horseResults[i][0], 2), round(self.horseResults[i][2], 2), round(self.horseResults[i][3], 2), round(self.startOdds[i], 2)))
+                        self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.startOdds[i])) 
+    
+    def projectFinalStandings(self):
+        self.projStandings = copy.deepcopy(self.horseResults)
+        self.projStandings.sort(key=lambda x: x['finalProb'], reverse=True)
+        # for i in range(len(self.projStandings)):
+        #     print(self.projStandings[i])
 
     def startOddsTimings(self):
         pass
@@ -101,6 +111,7 @@ class Bettor:
         # print(self.racePlacings)
         # print(self.raceTimings)
         self.startOddsPlacings()
+        self.projectFinalStandings()
 
     def placeBet(self, horseName, betType):
         # figure out odds and stake given the horse being analysed
@@ -120,6 +131,13 @@ class Bettor:
             bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': True}
         
         return bet
+
+    def updateOdds(self, horseName, currentStandings):
+        # bettor will compate their own projected final standings against the race's current standings and decide if it wants to place an in-play bet
+        # how often it does this is determined by the bettor's inPlayCheck attribute - some may check at every timestep, others will check less regularly or not at all
+        # need to be careful not to let it bet with itself
+        if currentStandings[0].name != self.projStandings[0]['HorseName']:
+            print('I SHOULD UPDATE ODDS')
 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
