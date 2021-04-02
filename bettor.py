@@ -116,23 +116,23 @@ class Bettor:
         self.startOddsPlacings()
         self.projectFinalStandings()
 
-    def placeBet(self, horseName, betType):
+    def placeBet(self, horseIndex, betType):
         # figure out odds and stake given the horse being analysed
         # currently all it does is that it trys to back a horse at slightly longer odds, vice versa for lays
         if betType == 'Back':
-            odds = round(self.startOdds[horseName] * np.random.uniform(1.01, 1.1), 2)
+            odds = round(self.startOdds[horseIndex] * np.random.uniform(1.01, 1.1), 2)
             # figure out stake
             # currently always bets 2 pounds
             stake = 2
             profit = round((odds * stake) - stake, 2)
             self.balance -= stake
-            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Profit': profit, 'Matched': False}
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseIndex+1, 'Odds': odds, 'Stake': stake, 'Profit': profit, 'Matched': False}
         elif betType == 'Lay':
-            odds = round(self.startOdds[horseName] * np.random.uniform(0.9, 0.99), 2)
+            odds = round(self.startOdds[horseIndex] * np.random.uniform(0.9, 0.99), 2)
             stake = 2
             liability = round((odds * stake) - stake, 2)
             self.balance -= liability
-            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': False}
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseIndex+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': False}
         
         return bet
 

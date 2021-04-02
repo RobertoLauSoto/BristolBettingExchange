@@ -31,12 +31,12 @@ class LOB:
         bet['Matched'] = True
         bet['Odds'] = bestOddsBet['Odds']
         if bet['BetType'] == 'Back':
-            bet['Profit'] = bestOddsBet['Liability']
+            bet['Profit'] = copy.deepcopy(bestOddsBet['Liability'])
         if bet['BetType'] == 'Lay':
             bettors[bettorIndex].balance += bet['Liability'] # add old liability back
             bettors[bettorIndex].balance -= bestOddsBet['Profit'] # take away new liability
-            bet['Liability'] = bestOddsBet['Profit']
-        bettors[bettorIndex].placedBets.append(bet)
+            bet['Liability'] = copy.deepcopy(bestOddsBet['Profit'])
+        # bettors[bettorIndex].placedBets.append(bet)
         bettors[bettorIndex].matchedBets.append(bet)
         bestOddsBet['Matched'] = True
         bettors[bestOddsIndex].matchedBets.append(bestOddsBet)
@@ -47,7 +47,8 @@ class LOB:
                     if bettors[bestOddsIndex].placedBets[bet]['Odds'] == bestOddsBet['Odds']:
                         if bettors[bestOddsIndex].placedBets[bet]['Stake'] == bestOddsBet['Stake']:
                             # if bettors[bestOddsIndex].placedBets[bet]['Time'] == bestOddsBet['Time']:
-                            bettors[bestOddsIndex].placedBets[bet]['Matched'] = True
+                            # bettors[bestOddsIndex].placedBets[bet]['Matched'] = True
+                            pass
         self.removeBet(horseID, bestOddsIndex+1)
     
     def anonLOB(self):
