@@ -37,7 +37,7 @@ class Horse:
             prefDistance += abs(raceFactors[i] - self.prefs[i]) ** pNorm
         prefDistance = prefDistance ** (1 / pNorm)
         self.prefFactor =  (prefConstant - prefDistance) / numRaceFactors
-        print('Horse {0} pref distance is : {1}. Pref factor is: {2}. Min speed is: {3}. Max speed is: {4}.'.format(self.name, prefDistance, self.prefFactor, self.minSpeed, self.maxSpeed))
+        # print('Horse {0} pref distance is : {1}. Pref factor is: {2}. Min speed is: {3}. Max speed is: {4}.'.format(self.name, prefDistance, self.prefFactor, self.minSpeed, self.maxSpeed))
 
     def reset(self):
         self.currDistance = 0

@@ -20,9 +20,11 @@ class Bettor:
         self.oddsWeight    = 0                       # float representing the weight used to determine weighted average between horse probabilities, e.g. probability from the number of wins, from average finish position etc.
         self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettor, based on placings/timings/prefs etc.
         self.projStandings = [None] * race.numHorses # projected final standings calculated by bettor based on their simulations, used to compare to live standings to decide in play bets
-        self.currentOdds   = [None] * race.numHorses # list of current odds calculated by bettor, based on live race
+        self.currentOdds   = []                      # list of current odds calculated by bettor, based on live race
         self.placedBets    = []                      # list of all bets placed by the bettor, matched or unmatched
         self.matchedBets   = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
+        self.numChecksDone = 0
+        self.unmatchedBacks = 0
 
     def __str__(self) -> str:
         pass
@@ -75,9 +77,10 @@ class Bettor:
             else:
                 decimalOddsToWin = 1 / (0.1 / 100)
             self.startOdds[i] = decimalOddsToWin
+            self.horseResults[i]['startOdds'] = round(decimalOddsToWin, 2)
             # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
-            print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, decimalOddsToWin = {5}'.format(
-                        self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.startOdds[i])) 
+            # print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, startOdds = {5}'.format(
+                        # self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.horseResults[i]['startOdds'])) 
     
     def projectFinalStandings(self):
         self.projStandings = copy.deepcopy(self.horseResults)
@@ -121,23 +124,61 @@ class Bettor:
             # figure out stake
             # currently always bets 2 pounds
             stake = 2
-            profit = (odds * stake) - stake
+            profit = round((odds * stake) - stake, 2)
             self.balance -= stake
             bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Profit': profit, 'Matched': False}
         elif betType == 'Lay':
             odds = round(self.startOdds[horseName] * np.random.uniform(0.9, 0.99), 2)
             stake = 2
-            liability = (odds * stake) - stake
-            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': True}
+            liability = round((odds * stake) - stake, 2)
+            self.balance -= liability
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseName+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': False}
         
         return bet
 
-    def updateOdds(self, horseName, currentStandings):
+    def placeInPlayBet(self, horseIndex, betType, time):
+        if betType == 'Back':
+            odds = round(self.currentOdds[horseIndex] * np.random.uniform(1.01, 1.1), 2)
+            stake = 2
+            profit = round((odds * stake) - stake, 2)
+            self.balance -= stake
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseIndex+1, 'Odds': odds, 'Stake': stake, 'Profit': profit, 'Matched': False, 'Time': time}
+        elif betType == 'Lay':
+            odds = round(self.currentOdds[horseIndex] * np.random.uniform(0.9, 0.99), 2)
+            stake = 2
+            liability = round((odds * stake) - stake, 2)
+            self.balance -= liability
+            bet = {'BettorID': self.id, 'BetType': betType, 'HorseName': horseIndex+1, 'Odds': odds, 'Stake': stake, 'Liability': liability, 'Matched': False, 'Time': time}
+        
+        return bet
+
+    def updateOdds(self, currentStandings, time, currentLeaderID, projWinnerID):
         # bettor will compate their own projected final standings against the race's current standings and decide if it wants to place an in-play bet
+        # could also use responsiveness / current speed / ground lost etc. to determine how it wants to update odds
         # how often it does this is determined by the bettor's inPlayCheck attribute - some may check at every timestep, others will check less regularly or not at all
         # need to be careful not to let it bet with itself
+        updateBets = False
+        if self.numChecksDone == 0:
+            self.currentOdds = copy.deepcopy(self.startOdds)
         if currentStandings[0].name != self.projStandings[0]['HorseName']:
-            print('I SHOULD UPDATE ODDS')
+            updateBets = True
+            oddsWeight = np.random.uniform(0.9, 1.0)
+            probFromCurrentPositionCurrentLeader   = ((1 - (currentStandings[0].currPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
+            newFinalProbCurrentLeader = oddsWeight * probFromCurrentPositionCurrentLeader + (1-oddsWeight) * self.currentOdds[currentLeaderID-1]
+            currentLeaderOdds = 1 / (newFinalProbCurrentLeader / 100)
+            self.currentOdds[currentLeaderID-1] = currentLeaderOdds
+            # get current position of projected winner
+            for i in range(len(currentStandings)):
+                if currentStandings[i].name == projWinnerID:
+                    projWinnerCurrentPosition = currentStandings[i].currPosition
+            probFromCurrentPositionProjectedWinner = ((1 - (projWinnerCurrentPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
+            newFinalProbProjWinner = oddsWeight * probFromCurrentPositionProjectedWinner + (1-oddsWeight) * self.currentOdds[projWinnerID-1]
+            projWinnerNewOdds = 1 / (newFinalProbProjWinner / 100)
+            self.currentOdds[projWinnerID-1] = projWinnerNewOdds
+            # print('I SHOULD UPDATE ODDS - Horse {0} winning, Horse {1} projected, Time checked was {2}'.format(currentStandings[0].name, self.projStandings[0]['HorseName'], time))
+            self.numChecksDone += 1
+            
+        return updateBets
 
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)

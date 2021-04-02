@@ -27,35 +27,43 @@ class LOB:
     def removeBet(self, horseID, bettorID):
         self.bets[horseID] = [bet for bet in self.bets[horseID] if not (bet['BettorID'] == bettorID)]
 
-    def matchBet(self, horseID, bettorID, bet, bestOddsID, bestOddsBet, bettors):
+    def matchBet(self, horseID, bettorIndex, bet, bestOddsIndex, bestOddsBet, bettors):
         bet['Matched'] = True
         bet['Odds'] = bestOddsBet['Odds']
         if bet['BetType'] == 'Back':
             bet['Profit'] = bestOddsBet['Liability']
         if bet['BetType'] == 'Lay':
+            bettors[bettorIndex].balance += bet['Liability'] # add old liability back
+            bettors[bettorIndex].balance -= bestOddsBet['Profit'] # take away new liability
             bet['Liability'] = bestOddsBet['Profit']
-        bettors[bettorID].placedBets.append(bet)
-        bettors[bettorID].matchedBets.append(bet)
+        bettors[bettorIndex].placedBets.append(bet)
+        bettors[bettorIndex].matchedBets.append(bet)
         bestOddsBet['Matched'] = True
-        bettors[bestOddsID].matchedBets.append(bestOddsBet)
+        bettors[bestOddsIndex].matchedBets.append(bestOddsBet)
         # changed flag of the bet in the bettors placed bet array to True
-        for bet in range(len(bettors[bestOddsID].placedBets)):
-            if bettors[bestOddsID].placedBets[bet]['HorseName'] == bestOddsBet['HorseName'] and bettors[bestOddsID].placedBets[bet]['Odds'] == bestOddsBet['Odds']:
-                bettors[bestOddsID].placedBets[bet]['Matched'] = True
-        self.removeBet(horseID, bestOddsID+1)
+        for bet in range(len(bettors[bestOddsIndex].placedBets)):
+            if bettors[bestOddsIndex].placedBets[bet]['BetType'] == bestOddsBet['BetType']:
+                if bettors[bestOddsIndex].placedBets[bet]['HorseName'] == bestOddsBet['HorseName']:
+                    if bettors[bestOddsIndex].placedBets[bet]['Odds'] == bestOddsBet['Odds']:
+                        if bettors[bestOddsIndex].placedBets[bet]['Stake'] == bestOddsBet['Stake']:
+                            # if bettors[bestOddsIndex].placedBets[bet]['Time'] == bestOddsBet['Time']:
+                            bettors[bestOddsIndex].placedBets[bet]['Matched'] = True
+        self.removeBet(horseID, bestOddsIndex+1)
     
     def anonLOB(self):
         self.anonBets = copy.deepcopy(self.bets)
         for i in range(len(self.anonBets)):
             for j in range(len(self.anonBets[i+1])):
-                self.anonBets[i+1][j].pop('BettorID')
+                if len(self.anonBets[i+1]) != 0:
+                    self.anonBets[i+1][j].pop('BettorID')
 
     def sortLOB(self):
         for i in range(len(self.bets)):
-            if self.bets[i+1][0]['BetType'] == 'Back':  
-                self.bets[i+1].sort(key=lambda x: x['Odds'])
-            elif self.bets[i+1][0]['BetType'] == 'Lay':
-                self.bets[i+1].sort(key=lambda x: x['Odds'], reverse=True)
+            if len(self.bets[i+1]) != 0:
+                if self.bets[i+1][0]['BetType'] == 'Back':  
+                    self.bets[i+1].sort(key=lambda x: x['Odds'])
+                elif self.bets[i+1][0]['BetType'] == 'Lay':
+                    self.bets[i+1].sort(key=lambda x: x['Odds'], reverse=True)
 
 if __name__ == "__main__":
     pass
