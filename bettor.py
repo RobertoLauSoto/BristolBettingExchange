@@ -23,6 +23,7 @@ class Bettor:
         self.currentOdds   = []                      # list of current odds calculated by bettor, based on live race
         self.placedBets    = []                      # list of all bets placed by the bettor, matched or unmatched
         self.matchedBets   = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
+        self.oddsHistory   = []
         self.numChecksDone = 0
         self.unmatchedBacks = 0
 
@@ -77,10 +78,12 @@ class Bettor:
             else:
                 decimalOddsToWin = 1 / (0.1 / 100)
             self.startOdds[i] = decimalOddsToWin
+            # self.oddsHistory[horseName].append(round(decimalOddsToWin, 2))
             self.horseResults[i]['startOdds'] = round(decimalOddsToWin, 2)
-            # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, self.startOdds[i]))
+            print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, round(self.startOdds[i], 2)))
             # print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, startOdds = {5}'.format(
-                        # self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.horseResults[i]['startOdds'])) 
+                        # self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.horseResults[i]['startOdds']))
+        self.oddsHistory.append(self.startOdds)
     
     def projectFinalStandings(self):
         self.projStandings = copy.deepcopy(self.horseResults)
@@ -158,25 +161,32 @@ class Bettor:
         # how often it does this is determined by the bettor's inPlayCheck attribute - some may check at every timestep, others will check less regularly or not at all
         # need to be careful not to let it bet with itself
         updateBets = False
-        if self.numChecksDone == 0:
-            self.currentOdds = copy.deepcopy(self.startOdds)
+        oddsArray = copy.deepcopy(self.oddsHistory[self.numChecksDone])
+        self.numChecksDone += 1
+        # if self.numChecksDone == 0:
+        #     self.currentOdds = copy.deepcopy(self.startOdds)
+        #     self.oddsHistory[currentLeaderID].append(round(self.startOdds[currentLeaderID-1], 2))
+        #     self.oddsHistory[projWinnerID].append(round(self.startOdds[projWinnerID-1], 2))
+
         if currentStandings[0].name != self.projStandings[0]['HorseName']:
             updateBets = True
             oddsWeight = np.random.uniform(0.9, 1.0)
             probFromCurrentPositionCurrentLeader   = ((1 - (currentStandings[0].currPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
-            newFinalProbCurrentLeader = oddsWeight * probFromCurrentPositionCurrentLeader + (1-oddsWeight) * self.currentOdds[currentLeaderID-1]
+            newFinalProbCurrentLeader = oddsWeight * probFromCurrentPositionCurrentLeader + (1-oddsWeight) * oddsArray[currentLeaderID-1]
             currentLeaderOdds = 1 / (newFinalProbCurrentLeader / 100)
-            self.currentOdds[currentLeaderID-1] = currentLeaderOdds
+            oddsArray[currentLeaderID-1] = currentLeaderOdds
             # get current position of projected winner
             for i in range(len(currentStandings)):
                 if currentStandings[i].name == projWinnerID:
                     projWinnerCurrentPosition = currentStandings[i].currPosition
             probFromCurrentPositionProjectedWinner = ((1 - (projWinnerCurrentPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
-            newFinalProbProjWinner = oddsWeight * probFromCurrentPositionProjectedWinner + (1-oddsWeight) * self.currentOdds[projWinnerID-1]
+            newFinalProbProjWinner = oddsWeight * probFromCurrentPositionProjectedWinner + (1-oddsWeight) * oddsArray[projWinnerID-1]
             projWinnerNewOdds = 1 / (newFinalProbProjWinner / 100)
-            self.currentOdds[projWinnerID-1] = projWinnerNewOdds
+            oddsArray[projWinnerID-1] = projWinnerNewOdds
             # print('I SHOULD UPDATE ODDS - Horse {0} winning, Horse {1} projected, Time checked was {2}'.format(currentStandings[0].name, self.projStandings[0]['HorseName'], time))
-            self.numChecksDone += 1
+        self.currentOdds = copy.deepcopy(oddsArray)
+        self.oddsHistory.append(oddsArray)
+            
             
         return updateBets
 

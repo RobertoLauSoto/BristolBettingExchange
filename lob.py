@@ -8,9 +8,8 @@ from bettor import Bettor
 class LOB:
     def __init__(self, lobType):
         self.lobType   = lobType # backs or lays
-        self.bets      = {}      # dictionary of bets on this LOB, to be anonymized
+        self.bets      = {}      # dictionary of list of bets on this LOB, to be anonymized
         self.anonBets  = {}      # list of anonymised bets, made public to all bettors (keep as dictionary?)
-        self.worstOdds = None    # worst odds offered on the LOB, including stake
         self.bestOdds  = None    # best odds offered on the LOB, including stake
     
     def addBet(self, bet):
@@ -41,14 +40,7 @@ class LOB:
         bestOddsBet['Matched'] = True
         bettors[bestOddsIndex].matchedBets.append(bestOddsBet)
         # changed flag of the bet in the bettors placed bet array to True
-        for bet in range(len(bettors[bestOddsIndex].placedBets)):
-            if bettors[bestOddsIndex].placedBets[bet]['BetType'] == bestOddsBet['BetType']:
-                if bettors[bestOddsIndex].placedBets[bet]['HorseName'] == bestOddsBet['HorseName']:
-                    if bettors[bestOddsIndex].placedBets[bet]['Odds'] == bestOddsBet['Odds']:
-                        if bettors[bestOddsIndex].placedBets[bet]['Stake'] == bestOddsBet['Stake']:
-                            # if bettors[bestOddsIndex].placedBets[bet]['Time'] == bestOddsBet['Time']:
-                            # bettors[bestOddsIndex].placedBets[bet]['Matched'] = True
-                            pass
+
         self.removeBet(horseID, bestOddsIndex+1)
     
     def anonLOB(self):

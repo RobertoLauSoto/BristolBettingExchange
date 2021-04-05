@@ -34,13 +34,17 @@ class BBE:
             print('Bettor {0} inPlayCheck = {1}'.format(i+1, inPlayCheck))
             self.bettors[i].runSimulations(10) # run simulations
 
-    def populateLob(self):
+    def populateLOB(self):
         # create two empty LOB objects for the backs and lays and create whole LOB from there
         self.backs = LOB('Backs')
         self.lays  = LOB('Lays')
         
         for horse in range(self.race.numHorses):
             listOfBettors = list(range(1, self.numBettors+1))
+            bestBackOddsBet = None
+            bestLayOddsBet = None
+            self.backs.bestOdds = None
+            self.lays.bestOdds = None
             # print('HORSE {}'.format(horse+1))
             for bettorIndex in range(self.numBettors):
                 # get best odds currently on LOB, depends on what action is to be taken by the bettor
@@ -77,22 +81,22 @@ class BBE:
                         #     print('backMatched {0}, {1}, {2}'.format(bettorIndex, randomBettorId, bestBackOddsID))
                         self.backs.matchBet(horse+1, randomBettorId-1, layBet, bestBackOddsID-1, bestBackOddsBet, self.bettors)
                 # if the LOB is empty, or if no good odds available on the LOB, place a new bet on the LOB
-                if self.backs.bestOdds == None or layMatched != True:
+                if self.backs.bestOdds == None or layMatched == False:
                     # first place back bet
                     self.backs.addBet(backBet)
                     self.bettors[randomBettorId-1].placedBets.append(backBet)
                     
-                if self.lays.bestOdds == None or backMatched != True:
+                if self.lays.bestOdds == None or backMatched == False:
                     # then place lay bet
                     self.lays.addBet(layBet)  
                     self.bettors[randomBettorId-1].placedBets.append(layBet)
                               
-                if bettorIndex+1 == self.numBettors:
-                    #reset best odds
-                    bestBackOddsBet = None
-                    bestLayOddsBet = None
-                    self.backs.bestOdds = None
-                    self.lays.bestOdds = None
+                # if bettorIndex+1 == self.numBettors:
+                #     #reset best odds
+                #     bestBackOddsBet = None
+                #     bestLayOddsBet = None
+                #     self.backs.bestOdds = None
+                #     self.lays.bestOdds = None
 
         self.lob.append(self.backs)
         self.lob.append(self.lays) 
@@ -226,7 +230,7 @@ class BBE:
                             self.race.time = self.race.horses[-1].finishTime
                             self.race.determineFinalPlacings()
                             self.race.state = 'Finished'
-                            # self.race.plotRaceGraph()
+                            self.race.plotRaceGraph()
                             # print(len(self.race.finalStandings))
                             # print(self.race.numHorses)
                             # print(self.race.state)
@@ -290,15 +294,30 @@ class BBE:
             self.bettors[bettorIndex].balance = round(self.bettors[bettorIndex].balance, 2)
 
     def visualiseBets(self):
-        fig, ax = plt.subplots() # generate figure with subplots
-        for horse in range(self.race.numHorses):
-            pass
+        oddsHistoryDict = {}
+        for bettor in range(self.numBettors):
+            print('Bettor {0} odds history:  {1}'.format(bettor+1, self.bettors[bettor].oddsHistory))
+                
+            for j in range(self.numHorses):
+                oddsHistoryDict[j+1] = []
+                for i in range(len(self.bettors[bettor].oddsHistory)):
+                    oddsHistoryDict[j+1].append(self.bettors[bettor].oddsHistory[i][j])
+                    
+            fig, ax = plt.subplots() # generate figure with subplots
+            for horse in range(self.race.numHorses):
+                ax.plot(range(0, len(oddsHistoryDict[horse+1])), oddsHistoryDict[horse+1], label='Horse {} odds'.format(horse+1), color=self.race.horses[horse].color)
+            legend = ax.legend()
+            plt.xlabel('Number of updates')
+            plt.ylabel('Decimal odds')
+            plt.title('Odds history of Bettor {}'.format(bettor+1))
+            plt.show()
+
 
 if __name__ == "__main__":
     for i in range(100):
-        testBBE = BBE('Test', 'Test Race - Real Race', 2000, 10, 10)
+        testBBE = BBE('Test', 'Test Race - Real Race', 2000, 5, 2)
         testBBE.prepareRace()
-        testBBE.populateLob()
+        testBBE.populateLOB()
         # print(testBBE.unsortedLOB[0].bets[1])
         # print(testBBE.unsortedLOB[1].bets[1])
         # print(testBBE.lob[0].bets[1])
@@ -317,6 +336,8 @@ if __name__ == "__main__":
             # print(testBBE.bettors[bettorIndex].placedBets)
         print('Total balances = {}'.format(round(totalBalances)))
         print('Race winner = {}'.format(testBBE.race.winner[0].name))
+        testBBE.visualiseBets()
+        
         # print(round(testBBE.race.winner[0].currTime))
         if round(totalBalances) != round(10000*testBBE.numBettors):
             print(testBBE.bettors[0].matchedBets)

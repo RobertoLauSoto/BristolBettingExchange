@@ -1,12 +1,13 @@
 import numpy as np
 class Horse:
-    def __init__(self, name, startDistance, startPos, currDistance, currPos, time, numRaceFactors, raceFactors):
+    def __init__(self, name, startDistance, startPos, currDistance, currPos, time, numRaceFactors, raceFactors, color):
         self.name            = name                             # identity of the horse/competitor
         self.startDistance   = startDistance                    # current distance run by competitor (metres)
         self.startPosition   = startPos                         # starting position of the competitor
         self.currDistance    = currDistance                     # current distance run by competitor (metres)
         self.currPosition    = currPos                          # current position of the competitor
         self.currTime        = time                             # current time taken by competitor (seconds)
+        self.color           = color
         self.maxTopSpeed     = 24                               # top speed of a horse in m/s
         self.minSpeed        = 0                                # minimum speed of competitor
         self.maxSpeed        = 0                                # maximum/top speed of competitor

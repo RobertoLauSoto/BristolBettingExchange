@@ -4,6 +4,7 @@ import time
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from horse import Horse
 class Race:
     def __init__(self, name, distance, numHorses):
@@ -33,8 +34,9 @@ class Race:
 
     def createHorses(self):
         horses = [None] * self.numHorses
+        colors = cm.tab20(range(20))
         for i in range(self.numHorses):
-            horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors) # each horse has a number ID starting from 1 - could be changed to random string names
+            horses[i] = Horse(i+1, 0, 1, 0, 1, 0, self.numRaceFactors, self.raceFactors, colors[i%self.numHorses]) # each horse has a number ID starting from 1 - could be changed to random string names
             # print(horses[i])
         self.horses = horses
 
@@ -115,7 +117,7 @@ class Race:
     def plotRaceGraph(self):
         fig, ax = plt.subplots() # generate figure with subplots
         for i in range(len(self.finalStandings)):
-            ax.plot(range(0, len(self.finalStandings[i].distanceHistory)), self.finalStandings[i].distanceHistory, label='Horse {}'.format(self.finalStandings[i].name)) # plot each horses distance-time line graph in order of placing
+            ax.plot(range(0, len(self.finalStandings[i].distanceHistory)), self.finalStandings[i].distanceHistory, label='Horse {}'.format(self.finalStandings[i].name), color=self.finalStandings[i].color) # plot each horses distance-time line graph in order of placing
         plt.axhline(y=self.distance, label='Finish line', color='black', linestyle='--')
         legend = ax.legend()
         plt.xlabel('Time (seconds)')
