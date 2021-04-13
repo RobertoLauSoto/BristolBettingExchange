@@ -136,7 +136,6 @@ class Race:
         self.finalStandings.sort(key=lambda x: [x.currTime, -x.currDistance]) # sort final standings of horses by time (asc.) and then by distance (dist.) if equal time
         for i in range(len(self.finalStandings)):
             self.finalStandings[i].currPosition = i+1 # place final position
-        self.winner.append(self.finalStandings[0]) # get winner
         self.top3.extend([self.finalStandings[0], self.finalStandings[1], self.finalStandings[2]]) # get top 3 placed
 
     def runRace(self):
@@ -162,6 +161,8 @@ class Race:
                         self.horses[i].currTime = self.horses[i].finishTime
                         # print('Test : horse ' + str(i+1) + ' finished')
                         self.finalStandings.append(self.horses[i])
+                        if len(self.winner) == 0:
+                            self.winner.append(self.horses[i]) # winner
                     if len(self.finalStandings) == self.numHorses: # all horses have finished
                         self.time = self.horses[-1].finishTime
                         self.determineFinalPlacings()

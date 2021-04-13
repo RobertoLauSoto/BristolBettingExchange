@@ -5,27 +5,29 @@ from race import Race
 import copy
 class Bettor:
     def __init__(self, name, balance, betType, time, race, inPlayCheck):
-        self.id            = name                    # id of bettor
-        self.balance       = balance                 # starting balance in bettor's wallet
-        self.betType       = betType                 # type of strategy the bettor is taking
-        self.birthTime     = time                    # age/time of bettor from init
-        self.race          = race                    # Race object bettor is placing bets on
-        self.inPlayCheck   = inPlayCheck             # int representing how often a bettor updates their odds to decide in-play bets - 0 implies no in-play bets, 1 means every timestep, 10 every 10 timesteps etc.
-        self.bet           = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName, Odds, Stake
-        self.numSims       = 0                       # number of simulations made by bettor to create starting odds
-        self.racePlacings  = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
-        self.raceTimings   = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
-        self.racePrefs     = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
-        self.horseResults  = [None] * race.numHorses # list of dicts of results of each horse after a number of simulations, recording probabilites to win/average position etc.
-        self.oddsWeight    = 0                       # float representing the weight used to determine weighted average between horse probabilities, e.g. probability from the number of wins, from average finish position etc.
-        self.startOdds     = [None] * race.numHorses # list of starting odds calculated by bettor, based on placings/timings/prefs etc.
-        self.projStandings = [None] * race.numHorses # projected final standings calculated by bettor based on their simulations, used to compare to live standings to decide in play bets
-        self.currentOdds   = []                      # list of current odds calculated by bettor, based on live race
-        self.placedBets    = []                      # list of all bets placed by the bettor, matched or unmatched
-        self.matchedBets   = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
-        self.oddsHistory   = []
-        self.numChecksDone = 0
-        self.unmatchedBacks = 0
+        self.id               = name                    # id of bettor
+        self.balance          = balance                 # starting balance in bettor's wallet
+        self.betType          = betType                 # type of strategy the bettor is taking
+        self.birthTime        = time                    # age/time of bettor from init
+        self.race             = race                    # Race object bettor is placing bets on
+        self.inPlayCheck      = inPlayCheck             # int representing how often a bettor updates their odds to decide in-play bets - 0 implies no in-play bets, 1 means every timestep, 10 every 10 timesteps etc.
+        self.bet              = {}                      # dictionary to represent a bet that the bettor wants to place, will have keys indicating: BettorID, Back/Lay, HorseName, Odds, Stake
+        self.numSims          = 0                       # number of simulations made by bettor to create starting odds
+        self.racePlacings     = [None] * race.numHorses # list of lists to record history of placings of each horse after simulations
+        self.raceTimings      = [None] * race.numHorses # list of lists to record finish times of each horse after simulations
+        self.racePrefs        = [None] * race.numHorses # list of lists to measure/guess preferences of each horse
+        self.horseResults     = [None] * race.numHorses # list of dicts of results of each horse after a number of simulations, recording probabilites to win/average position etc.
+        self.oddsWeight       = 0                       # float representing the weight used to determine weighted average between horse probabilities, e.g. probability from the number of wins, from average finish position etc.
+        self.startOdds        = [None] * race.numHorses # list of starting odds calculated by bettor, based on placings/timings/prefs etc.
+        self.projStandings    = [None] * race.numHorses # projected final standings calculated by bettor based on their simulations, used to compare to live standings to decide in play bets
+        self.currentOdds      = []                      # list of current odds calculated by bettor, based on live race
+        self.placedBets       = []                      # list of all bets placed by the bettor, matched or unmatched
+        self.matchedBets      = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
+        self.oddsHistory      = []
+        self.numChecksDone    = 0
+        self.unmatchedBacks   = 0
+        self.updateOddsWeight = 0
+        self.oddsWeightChosen = False
 
     def __str__(self) -> str:
         pass
@@ -155,23 +157,21 @@ class Bettor:
         
         return bet
 
-    def updateOdds(self, currentStandings, time, currentLeaderID, projWinnerID):
-        # bettor will compate their own projected final standings against the race's current standings and decide if it wants to place an in-play bet
+    def updateLeaderOdds(self, currentStandings, time, currentLeaderID, projWinnerID):
+        # bettor will compare their own projected final standings against the race's current standings and decide if it wants to place an in-play bet
         # could also use responsiveness / current speed / ground lost etc. to determine how it wants to update odds
         # how often it does this is determined by the bettor's inPlayCheck attribute - some may check at every timestep, others will check less regularly or not at all
         # need to be careful not to let it bet with itself
+        # update 7/4/21: first version of inPlayBetting done a couple of days ago. This function only updates 2 horses right now (current leader and projected
+        # winner), maybe update all horses odds?
         updateBets = False
         oddsArray = copy.deepcopy(self.oddsHistory[self.numChecksDone])
         self.numChecksDone += 1
-        # if self.numChecksDone == 0:
-        #     self.currentOdds = copy.deepcopy(self.startOdds)
-        #     self.oddsHistory[currentLeaderID].append(round(self.startOdds[currentLeaderID-1], 2))
-        #     self.oddsHistory[projWinnerID].append(round(self.startOdds[projWinnerID-1], 2))
 
         if currentStandings[0].name != self.projStandings[0]['HorseName']:
             updateBets = True
             oddsWeight = np.random.uniform(0.9, 1.0)
-            probFromCurrentPositionCurrentLeader   = ((1 - (currentStandings[0].currPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
+            probFromCurrentPositionCurrentLeader = ((1 - (currentStandings[0].currPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
             newFinalProbCurrentLeader = oddsWeight * probFromCurrentPositionCurrentLeader + (1-oddsWeight) * oddsArray[currentLeaderID-1]
             currentLeaderOdds = 1 / (newFinalProbCurrentLeader / 100)
             oddsArray[currentLeaderID-1] = currentLeaderOdds
@@ -184,12 +184,57 @@ class Bettor:
             projWinnerNewOdds = 1 / (newFinalProbProjWinner / 100)
             oddsArray[projWinnerID-1] = projWinnerNewOdds
             # print('I SHOULD UPDATE ODDS - Horse {0} winning, Horse {1} projected, Time checked was {2}'.format(currentStandings[0].name, self.projStandings[0]['HorseName'], time))
+        
+        self.currentOdds = copy.deepcopy(oddsArray)
+        self.oddsHistory.append(oddsArray)    
+            
+        return updateBets
+    
+    def calcOddsWeight(self, currentStandings, time):
+        # this should determine an odds weight depending on how much of the race is left
+        percentDistCovered = currentStandings[0].currDistance / self.race.distance
+        self.updateOddsWeight = percentDistCovered #+ np.random.uniform(-0.02, 0.02)
+
+    def calcProbFromCurrentDistance(self, horseCurrentPostion, horseCurrentDistance, invTotalDistancesLeft):
+        # calc denominator
+        positionWeight = self.race.numHorses + 1 - horseCurrentPostion
+        probability = ((positionWeight * (1 / (self.race.distance - horseCurrentDistance))) / invTotalDistancesLeft) * 100
+        
+        return probability
+
+    def updateAllOdds(self, currentStandings, time):
+        # 8/4/21: trying to implement update of all horses odds, depending on their current position compared to their projected placing
+        oddsArray = copy.deepcopy(self.oddsHistory[self.numChecksDone])
+        self.numChecksDone += 1
+        self.calcOddsWeight(currentStandings, time)
+        for horseIndex in range(len(currentStandings)):
+            # get horse's current position
+            invTotalDistancesLeft = 0
+            for i in range(len(currentStandings)):
+                invTotalDistancesLeft += (1 / (self.race.distance - currentStandings[i].currDistance))
+                if currentStandings[i].name == horseIndex+1:
+                    horseCurrentPosition = currentStandings[i].currPosition
+                    horseCurrentDistance = currentStandings[i].currDistance
+                    
+            prevProb = 100 / oddsArray[horseIndex]
+            probFromCurrentPosition = ((1 - (horseCurrentPosition / self.race.numHorses)) / ((self.race.numHorses - 1) / 2)) * 100
+            probFromCurrentDistance = self.calcProbFromCurrentDistance(horseCurrentPosition, horseCurrentDistance, invTotalDistancesLeft)
+            newFinalProb = self.updateOddsWeight * probFromCurrentDistance + (
+                            (1 - self.updateOddsWeight) / 2) * prevProb + (
+                            (1 - self.updateOddsWeight) / 2) * (100 / self.startOdds[horseIndex])
+            if newFinalProb == 0:
+                newFinalProb = 0.1
+            newOdds = 1 / (newFinalProb / 100)
+            # limit odds to fall within 1.01 or 1000
+            if newOdds < 1.01:
+                newOdds = 1.01
+            elif newOdds > 1000:
+                newOdds = 1000
+            oddsArray[horseIndex] = newOdds
+        
         self.currentOdds = copy.deepcopy(oddsArray)
         self.oddsHistory.append(oddsArray)
             
-            
-        return updateBets
-
 if __name__ == "__main__":
     testRace = Race("Test Race", 2000, 10)
     testRace.createHorses() # create competitors
