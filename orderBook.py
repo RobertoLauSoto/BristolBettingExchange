@@ -5,12 +5,12 @@ from horse import Horse
 from race import Race
 from bettor import Bettor
 
-class LOB:
-    def __init__(self, lobType):
-        self.lobType   = lobType # backs or lays
-        self.bets      = {}      # dictionary of list of bets on this LOB, to be anonymized
+class OrderBook:
+    def __init__(self, orderBookType):
+        self.orderBookType   = orderBookType # backs or lays
+        self.bets      = {}      # dictionary of list of bets on this orderBook, to be anonymized
         self.anonBets  = {}      # list of anonymised bets, made public to all bettors (keep as dictionary?)
-        self.bestOdds  = None    # best odds offered on the LOB, including stake
+        self.bestOdds  = None    # best odds offered on the orderBook, including stake
     
     def addBet(self, bet):
         #bet is a dictionary, taken from bettor.bet
@@ -43,14 +43,14 @@ class LOB:
 
         self.removeBet(horseID, bestOddsIndex+1)
     
-    def anonLOB(self):
+    def anonOrderBook(self):
         self.anonBets = copy.deepcopy(self.bets)
         for i in range(len(self.anonBets)):
             for j in range(len(self.anonBets[i+1])):
                 if len(self.anonBets[i+1]) != 0:
                     self.anonBets[i+1][j].pop('BettorID')
 
-    def sortLOB(self):
+    def sortOrderBook(self):
         for i in range(len(self.bets)):
             if len(self.bets[i+1]) != 0:
                 if self.bets[i+1][0]['BetType'] == 'Back':  

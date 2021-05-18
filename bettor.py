@@ -54,7 +54,7 @@ class Bettor:
 
     def startOddsPlacings(self):
         self.oddsWeight = np.random.uniform(0.5, 0.95)
-        print('Bettor {0} Odds weight: {1}'.format(self.id, self.oddsWeight))
+        # print('Bettor {0} Odds weight: {1}'.format(self.id, self.oddsWeight))
         for i in range(len(self.racePlacings)):
             horseName = i+1
             numberWins = 0
@@ -82,7 +82,7 @@ class Bettor:
             self.startOdds[i] = decimalOddsToWin
             # self.oddsHistory[horseName].append(round(decimalOddsToWin, 2))
             self.horseResults[i]['startOdds'] = round(decimalOddsToWin, 2)
-            print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, round(self.startOdds[i], 2)))
+            # print('Bettor {0} odds for Horse {1}: {2}'.format(self.id, i+1, round(self.startOdds[i], 2)))
             # print('Bettor {0}, Horse {1}: probPlacingFirst = {2}, probAvgPosition = {3}, finalProb = {4}, startOdds = {5}'.format(
                         # self.id, horseName, self.horseResults[i]['probPlacingFirst'], self.horseResults[i]['probAvgPosition'], self.horseResults[i]['finalProb'], self.horseResults[i]['startOdds']))
         self.oddsHistory.append(self.startOdds)
@@ -193,7 +193,7 @@ class Bettor:
     def calcOddsWeight(self, currentStandings, time):
         # this should determine an odds weight depending on how much of the race is left
         percentDistCovered = currentStandings[0].currDistance / self.race.distance
-        self.updateOddsWeight = percentDistCovered #+ np.random.uniform(-0.02, 0.02)
+        self.updateOddsWeight = percentDistCovered 
 
     def calcProbFromCurrentDistance(self, horseCurrentPostion, horseCurrentDistance, invTotalDistancesLeft):
         # calc denominator
