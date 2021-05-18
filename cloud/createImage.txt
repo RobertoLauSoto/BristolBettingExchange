@@ -1,0 +1,10 @@
+sudo yum update -y
+sudo -i # become root user
+yum install python3 # install Python 3
+curl -O https://bootstrap.pypa.io/get-pip.py # fetch pip
+/bin/python3 get-pip.py --user # install pip
+/root/.local/bin/pip install boto3 # install boto3 lib
+/root/.local/bin/pip install numpy # install numpy lib
+/root/.local/bin/pip install matplotlib # install matplotlib lib
+aws s3 cp s3://BUCKET_URL/bbe_doTask.py /tmp/bbe_doTask.py # copy worker task to temp folder, replace BUCKET_URL with the S3 bucket url where task was uploaded
+
