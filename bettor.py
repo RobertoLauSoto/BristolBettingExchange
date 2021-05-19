@@ -23,11 +23,11 @@ class Bettor:
         self.currentOdds      = []                      # list of current odds calculated by bettor, based on live race
         self.placedBets       = []                      # list of all bets placed by the bettor, matched or unmatched
         self.matchedBets      = []                      # list of matched bets only, to calculate winnings/losses at the end of the race
-        self.oddsHistory      = []
-        self.numChecksDone    = 0
-        self.unmatchedBacks   = 0
-        self.updateOddsWeight = 0
-        self.oddsWeightChosen = False
+        self.oddsHistory      = []                      # array of odds that update during the race
+        self.numChecksDone    = 0                       # number of observations taken by the bettor of the race
+        self.unmatchedBacks   = 0                       # number of unmatched backs for a bettor after a session of BBE
+        self.updateOddsWeight = 0                       # weight used in updateOdds function
+        self.oddsWeightChosen = False                   # boolean flag to check if updateOddsWeight has been assigned
 
     def __str__(self) -> str:
         pass
@@ -162,8 +162,6 @@ class Bettor:
         # could also use responsiveness / current speed / ground lost etc. to determine how it wants to update odds
         # how often it does this is determined by the bettor's inPlayCheck attribute - some may check at every timestep, others will check less regularly or not at all
         # need to be careful not to let it bet with itself
-        # update 7/4/21: first version of inPlayBetting done a couple of days ago. This function only updates 2 horses right now (current leader and projected
-        # winner), maybe update all horses odds?
         updateBets = False
         oddsArray = copy.deepcopy(self.oddsHistory[self.numChecksDone])
         self.numChecksDone += 1
@@ -183,7 +181,7 @@ class Bettor:
             newFinalProbProjWinner = oddsWeight * probFromCurrentPositionProjectedWinner + (1-oddsWeight) * oddsArray[projWinnerID-1]
             projWinnerNewOdds = 1 / (newFinalProbProjWinner / 100)
             oddsArray[projWinnerID-1] = projWinnerNewOdds
-            # print('I SHOULD UPDATE ODDS - Horse {0} winning, Horse {1} projected, Time checked was {2}'.format(currentStandings[0].name, self.projStandings[0]['HorseName'], time))
+            # print('I should update odds - Horse {0} winning, Horse {1} projected, Time checked was {2}'.format(currentStandings[0].name, self.projStandings[0]['HorseName'], time))
         
         self.currentOdds = copy.deepcopy(oddsArray)
         self.oddsHistory.append(oddsArray)    
@@ -196,14 +194,12 @@ class Bettor:
         self.updateOddsWeight = percentDistCovered 
 
     def calcProbFromCurrentDistance(self, horseCurrentPostion, horseCurrentDistance, invTotalDistancesLeft):
-        # calc denominator
         positionWeight = self.race.numHorses + 1 - horseCurrentPostion
         probability = ((positionWeight * (1 / (self.race.distance - horseCurrentDistance))) / invTotalDistancesLeft) * 100
         
         return probability
 
     def updateAllOdds(self, currentStandings, time):
-        # 8/4/21: trying to implement update of all horses odds, depending on their current position compared to their projected placing
         oddsArray = copy.deepcopy(self.oddsHistory[self.numChecksDone])
         self.numChecksDone += 1
         self.calcOddsWeight(currentStandings, time)

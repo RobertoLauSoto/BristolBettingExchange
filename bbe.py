@@ -9,18 +9,18 @@ from orderBook import OrderBook
 import sys
 class BBE:
     def __init__(self, name, raceName, raceDistance, numHorses, numBettors):
-        self.name               = name # name of betting exchange
-        self.race               = None # Race object that will take place and bets placed on
-        self.raceName           = raceName
-        self.raceDistance       = raceDistance
-        self.numHorses          = numHorses
-        self.numBettors         = numBettors # number of bettors placing bets on the race
+        self.name               = name                # name of betting exchange
+        self.race               = None                # Race object that will take place and bets placed on
+        self.raceName           = raceName            # name of race
+        self.raceDistance       = raceDistance        # race distance
+        self.numHorses          = numHorses           # number of horses competing
+        self.numBettors         = numBettors          # number of bettors placing bets on the race
         self.bettors            = [None] * numBettors # list of Bettor objects that will populate this betting exchange
-        self.orderBook          = [] # Order book of betting exchange, made up of backs and lays orderBooks (essentially an array of two orderBook objects)
-        self.unsortedOrderBook  = []
-        self.backs              = None # orderBook offered to back a horse
-        self.lays               = None # orderBook offered to lay a horse
-        self.maxStake           = 20 # maximum stake allowed on the exchange
+        self.orderBook          = []                  # Order book of betting exchange, made up of backs and lays orderBooks (essentially an array of two orderBook objects)
+        self.unsortedOrderBook  = []                  # unsorted order book
+        self.backs              = None                # orderBook offered to back a horse
+        self.lays               = None                # orderBook offered to lay a horse
+        self.maxStake           = 20                  # maximum stake allowed on the exchange
 
     def prepareRace(self):
         self.race = Race(self.raceName, self.raceDistance, self.numHorses) # create race
@@ -219,7 +219,7 @@ class BBE:
             while(self.race.state != 'Finished'): # while race is in running
                 time += timestep # race time increases
                 self.determineCurrentStandings()
-                # do inplay betting stuff
+                # do inplay betting process
                 if len(self.race.currStandings) != 0 and len(self.race.winner) != 1:
                     for bettorIndex in range(self.numBettors):
                         if self.bettors[bettorIndex].inPlayCheck != 0:

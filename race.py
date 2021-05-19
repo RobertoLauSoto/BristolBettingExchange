@@ -18,7 +18,7 @@ class Race:
         self.lanes           = False                        # determining whether race has lanes, e.g. 100m/200m/sprint swimming. If True, groundLost factor for each competitor remains 1 throughout race
         self.staggered       = False                        # for a staggered start, e.g. Formula 1, where each competitor begins stationary at a different distance away from start. If True, competitors initialised with different distances
         self.rolling         = False                        # for a rolling start, e.g. Nascar, where competitors begin race at speed with different distances away from start. If True, comps initialised with diff. distances and speeds
-        self.raceEndTime            = 0                            # time taken for the race to officialy end, e.g. last competitor crossed the line or top 3 determined
+        self.raceEndTime     = 0                            # time taken for the race to officialy end, e.g. last competitor crossed the line or top 3 determined
         self.currStandings   = []                           # current standings updated each time step
         self.finalStandings  = []                           # final standings at the end of the race
         self.winner          = []                           # winner at the end of the race
@@ -87,20 +87,16 @@ class Race:
             if horse.name != i+1: # avoid comparing a horse to itself
                 if (0 <= self.horseDistances[i] - horse.currDistance <= 2): # if current horse is 2 metres or fewer behind comparison horse
                     if (self.horses[i].currSpeed > horse.currSpeed): # if comparison horse is faster - do nothing
-                        # groundLostFactor += 1
                         continue
                     else: # if comparison horse is slower - groundLost affected
                         if random.randint(1, 100) <= 30: # 30% likelihood slower horse in front will affect faster horse behind as overtake fails
                             groundLostFactor = np.random.normal(0.5, 0.1) * groundLostFactor # horse is around 50% slower
                             # print('Overtake by Horse {0} on Horse {1} failed - ground lost factor is {2}'.format(horse.name, self.horses[i].name, groundLostFactor))
                         else: # overtake occurs - groundLost not affected
-                            # groundLostFactor += 1
                             # print('Overtake by Horse {0} on Horse {1} success - ground lost factor is {2}'.format(horse.name, self.horses[i].name, groundLostFactor))
                             continue
                 else:
-                    # groundLostFactor += 1
                     continue
-        # horse.groundLost = groundLostFactor / self.numHorses
         horse.groundLost = groundLostFactor
 
     def generateForwardStep(self, horse):

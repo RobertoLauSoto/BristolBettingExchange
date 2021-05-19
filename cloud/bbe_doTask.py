@@ -762,7 +762,7 @@ class BBE:
         plt.xlabel('Time (seconds)')
         plt.ylabel('Distance (metres)')
         plt.title('Distance-Time graph for {}'.format(self.race.id))
-        filename = '{0}_graph_{1}.pdf'.format(self.race.id, self.name)
+        filename = '{0}_{1}_Graph.pdf'.format(self.name, self.race.id)
         plt.savefig(filename)
         s3_resource.meta.client.upload_file(Filename=filename, Bucket=bbeBucketName, Key=filename)
         plt.close(fig)

@@ -28,40 +28,45 @@ if __name__ == "__main__":
            "| |_/ /      | |_/ /      | |___\n"+
            "\____/ristol \____/etting \____/xchange\n")
 
-    BBE_name   = input('Enter a name for this BBE instance:')
+    BBE_name   = input('Enter a name for the BBE instance:')
     Race_name  = input('Enter a name for the race:')
     while True:
-        Distance   = input('Enter a distance in metres:')
+        DistanceString   = input('Enter a distance in metres:')
         try:
-            DistanceVal = float(Distance)
+            Distance = float(DistanceString)
             break
         except ValueError:
             print("Please enter a valid distance:")
     while True:
-        NumHorses  = input('Enter a number of horses:') 
+        NumHorsesString  = input('Enter a number of horses:') 
         try:
-            NumHorsesVal = int(NumHorses)
+            NumHorses = int(NumHorsesString)
             break
         except ValueError:
             print("Please enter a valid number:")
     while True:
-        NumBettors = input('Enter a number of bettors:')
+        NumBettorsString = input('Enter a number of bettors:')
         try:
-            NumBettorsVal = int(NumBettors)
+            NumBettors = int(NumBettorsString)
+            break
+        except ValueError:
+            print("Please enter a valid number:")
+    while True:
+        bbeSimsString = input('Enter the amount of BBE simulations you would like to run:')
+        try:
+            bbeSims = int(bbeSimsString)
             break
         except ValueError:
             print("Please enter a valid number:")
 
     bbeBucketName = create_bucket(bucket_prefix='bbe-bucket', s3_connection=s3_resource.meta.client)
 
-    bbeSims = 3
-
     for i in range(bbeSims):
         queue.send_message(
             MessageAttributes={
                 'BbeName': {
                     'DataType': 'String',
-                    'StringValue': '{0}_{1}'.format(BBE_name, i)
+                    'StringValue': '{0}_{1}'.format(BBE_name, i+1)
                 },
                 'RaceName': {
                     'DataType': 'String',
@@ -69,15 +74,15 @@ if __name__ == "__main__":
                 },
                 'RaceDistance': {
                     'DataType': 'Number',
-                    'StringValue': '%d'% DistanceVal
+                    'StringValue': '%d'% Distance
                 },
                 'NumHorses': {
                     'DataType': 'Number',
-                    'StringValue': '%d'% NumHorsesVal
+                    'StringValue': '%d'% NumHorses
                 },
                 'NumBettors': {
                     'DataType': 'Number',
-                    'StringValue': '%d'% NumBettorsVal
+                    'StringValue': '%d'% NumBettors
                 },
                 'BbeBucket': {
                     'DataType': 'String',
@@ -89,7 +94,7 @@ if __name__ == "__main__":
                 }
             },
             MessageBody=(
-                'BBE instance {0} to be completed. Upload to bucket {1}'.format(i, bbeBucketName)
+                'BBE instance {0} to be completed. Upload to bucket {1}'.format(i+1, bbeBucketName)
             )
         )
     print("Upload of BBE Simulation to AWS complete. Please download the graphs from the S3 bucket generated for results!")

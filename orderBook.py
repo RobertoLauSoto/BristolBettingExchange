@@ -8,9 +8,9 @@ from bettor import Bettor
 class OrderBook:
     def __init__(self, orderBookType):
         self.orderBookType   = orderBookType # backs or lays
-        self.bets      = {}      # dictionary of list of bets on this orderBook, to be anonymized
-        self.anonBets  = {}      # list of anonymised bets, made public to all bettors (keep as dictionary?)
-        self.bestOdds  = None    # best odds offered on the orderBook, including stake
+        self.bets      = {}                  # dictionary of list of bets on this orderBook, to be anonymized
+        self.anonBets  = {}                  # list of anonymised bets, made public to all bettors (keep as dictionary?)
+        self.bestOdds  = None                # best odds offered on the orderBook, including stake
     
     def addBet(self, bet):
         #bet is a dictionary, taken from bettor.bet

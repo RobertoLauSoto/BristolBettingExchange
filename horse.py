@@ -34,7 +34,6 @@ class Horse:
         self.maxSpeed = np.random.uniform(self.maxTopSpeed / 1.2, self.maxTopSpeed) # uniform distribution between ~12.2 and 24.5872 m/s(world record speed for a horse) to determine maximum speed
 
         # pNorm1 = 1 # see https://en.wikipedia.org/wiki/Distance#Distance_in_Euclidean_space
-        # # prefConstant1 = numRaceFactors ** (1 / pNorm1)
         # prefConstant1 = numRaceFactors
         # prefDistance1 = 0
         # for i in range(numRaceFactors):
@@ -43,7 +42,6 @@ class Horse:
         # self.prefPnorm1 =  (prefConstant1 - prefDistance1) / numRaceFactors
 
         # pNorm2 = 2 # see https://en.wikipedia.org/wiki/Distance#Distance_in_Euclidean_space
-        # # prefConstant2 = numRaceFactors ** (1 / pNorm2)
         # prefConstant2 = numRaceFactors
         # prefDistance2 = 0
         # for i in range(numRaceFactors):
@@ -52,7 +50,6 @@ class Horse:
         # self.prefPnorm2 =  (prefConstant2 - prefDistance2) / numRaceFactors
 
         pNorm = 3 # see https://en.wikipedia.org/wiki/Distance#Distance_in_Euclidean_space
-        # prefConstant = numRaceFactors ** (1 / pNorm)
         prefConstant = numRaceFactors
         prefDistance = 0
         for i in range(numRaceFactors):

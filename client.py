@@ -19,29 +19,29 @@ if __name__ == "__main__":
     BBE_name   = input('Enter a name for this BBE instance:')
     Race_name  = input('Enter a name for the race:')
     while True:
-        Distance   = input('Enter a distance in metres:')
+        DistanceString   = input('Enter a distance in metres:')
         try:
-            DistanceVal = float(Distance)
+            Distance = float(DistanceString)
             break
         except ValueError:
             print("Please enter a valid distance:")
     while True:
-        NumHorses  = input('Enter a number of horses:') 
+        NumHorsesString  = input('Enter a number of horses:') 
         try:
-            NumHorsesVal = int(NumHorses)
+            NumHorses = int(NumHorsesString)
             break
         except ValueError:
             print("Please enter a valid number:")
     while True:
-        NumBettors = input('Enter a number of bettors:')
+        NumBettorsString = input('Enter a number of bettors:')
         try:
-            NumBettorsVal = int(NumBettors)
+            NumBettors = int(NumBettorsString)
             break
         except ValueError:
             print("Please enter a valid number:")
                                        
     # clientBBE = BBE(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
-    clientBBE = BBE(BBE_name, Race_name, DistanceVal, NumHorsesVal, NumBettorsVal)
+    clientBBE = BBE(BBE_name, Race_name, Distance, NumHorses, NumBettors)
     # print(clientBBE.raceDistance)
     # print(clientBBE.numHorses)
     # print(clientBBE.numBettors)
